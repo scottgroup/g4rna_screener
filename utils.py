@@ -202,8 +202,8 @@ def fasta_str_fetcher(fasta_string, verbose=False):
     """
     fas_dic = OrderedDict()
     for instance in regex.split(r'\\r\\n>|\\n>|>', fasta_string)[1:]:
-        [description, seq] = regex.split(r'\\r\\n|\\n', instance.lstrip('>'))
-        fas_dic[description] = seq
+        [description, seq] = regex.split(r'\\r\\n|\\n', instance, maxsplit=1)
+        fas_dic[description] = regex.sub(r'\\r\\n|\\n','', seq)
     return fas_dic
 
 def kmer_transfo(
