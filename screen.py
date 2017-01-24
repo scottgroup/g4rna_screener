@@ -31,8 +31,12 @@ def apply_network(ann,
         if essential not in columns:
             columns.append(essential)
             columns_to_drop.append(essential)
-    RNome_df = gen_G4RNA_df(RNome_fetcher(fasta, 0, 0, verbose=verbose),
-            columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
+    try:
+        RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
+                columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
+    except:
+        RNome_df = gen_G4RNA_df(fasta_str_fetcher(fasta, verbose=verbose),
+                columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
     if 'score' in columns:
         network_file = open(ann,'r')
         ann = pickle.load(network_file)
@@ -67,7 +71,7 @@ def screen_usage(error_message=False):
     print "Use -V or --version to show program version\n"
     print "Apply options:"
     print "  -a, --ann       \tSupply a pickled ANN (.pkl format)"
-    print "  -f, --fasta-file\tSupply a fasta file (.fa .fas format)"
+    print "  -f, --fasta     \tSupply a fasta file (.fa .fas format)"
     print "  -w, --window    \tWindow length"
     print "  -s, --step      \tStep length between windows"
     print "  -sn,--score-name\tName given to the score of similitude"
@@ -117,11 +121,11 @@ def main():
     global start_time
     start_time = time.time()
     #Default values here in option_dict
-    option_dict = {"--columns":"description,score",
+    option_dict = {"--columns":"description,sequence,score",
             "--score-name":"score",
             "--window":False,
             "--step":10,
-            "--fasta-file":False}
+            "--fasta":False}
     for no, arg in enumerate(sys.argv):
         if arg[0] == "-":
             if arg in ["-?","--help"]:
@@ -134,7 +138,7 @@ def main():
                     "-e","--error"]:
                 option_dict[arg] = True
             elif arg in ["-a","--ann",
-                    "-f","--fasta-file",
+                    "-f","--fasta",
                     "-c","--columns",
                     "-w","--window",
                     "-s","--step",
@@ -168,7 +172,7 @@ chrome,start,end,[SCORE]\n\
         where [SCORE] is either score, cGcC or G4H')
     try:
         apply_network(option_dict.get("-a") or option_dict.get("--ann"),
-                option_dict.get("-f") or option_dict.get("--fasta-file"),
+                option_dict.get("-f") or option_dict.get("--fasta"),
                 option_dict.get("-c") or option_dict.get("--columns"),
                 option_dict.get("-w") or option_dict.get("--window"),
                 option_dict.get("-s") or option_dict.get("--step"),

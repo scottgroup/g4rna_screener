@@ -158,49 +158,53 @@ def format_description(fas_description, verbose=None):
         infos['strand'] = '+'
     return infos
 
-def RNome_fetcher(
+def fasta_fetcher(
         fasta_file,
         number_to_fetch,
         seq_size,
         verbose=False):
     """
-    Fetch for RNome sequences from a fasta file and returns a defined number
-    of random sequences or random window from random sequences if seq_size is
+    Fetch for sequences from a fasta file and returns a defined number of 
+    random sequences or random window from random sequences if seq_size is
     not 0.
     
     number_to_fetch = 0 takes everything
     seq_size = 0 takes full length sequences
     
     Return a dictionnary.
-    {ID:sequence}
+    {Description:sequence}
     """
     from Bio import SeqIO
-    RNome = OrderedDict()
+    fas_dic = OrderedDict()
     for seq in SeqIO.parse(fasta_file, 'fasta'):
-        try:
-            if 0 < len(format_description(seq.description
-                )["chromosome"].lstrip("chr")) < 4:
-                if len(seq.seq) > seq_size and seq_size != 0:
-                    r_int = np.random.randint(0, len(seq.seq)-seq_size)
-                    RNome[seq.description] = str(seq.seq)[r_int:r_int+seq_size]
-                else:
-                    RNome[seq.description] = str(seq.seq)
-        except:
-            if len(seq.seq) > seq_size and seq_size != 0:
-                r_int = np.random.randint(0, len(seq.seq)-seq_size)
-                RNome[seq.description] = str(seq.seq)[r_int:r_int+seq_size]
-            else:
-                RNome[seq.description] = str(seq.seq)
+        if len(seq.seq) > seq_size and seq_size != 0:
+            r_int = np.random.randint(0, len(seq.seq)-seq_size)
+            fas_dic[seq.description] = str(seq.seq)[r_int:r_int+seq_size]
+        else:
+            fas_dic[seq.description] = str(seq.seq)
     dic = {}
     verbosify(verbose, "File fetched")
     if number_to_fetch == 0:
-        return RNome
+        return fas_dic
     else:
-        randomize = np.random.permutation(len(RNome))
+        randomize = np.random.permutation(len(fas_dic))
         for i in range(number_to_fetch):
-            dic[RNome.keys()[randomize[i]]] = RNome[
-                    RNome.keys()[randomize[i]]].strip('N').strip('n')
+            dic[fas_dic.keys()[randomize[i]]] = fas_dic[
+                    fas_dic.keys()[randomize[i]]].strip('N').strip('n')
         return dic
+
+def fasta_str_fetcher(fasta_string, verbose=False):
+    """
+    Fetch for sequences in a fasta file presented as a string.
+    
+    Return a dictionnary.
+    {Description:sequence}
+    """
+    fas_dic = OrderedDict()
+    for instance in regex.split(r'\\r\\n>|\\n>|>', fasta_string)[1:]:
+        [description, seq] = regex.split(r'\\r\\n|\\n', instance.lstrip('>'))
+        fas_dic[description] = seq
+    return fas_dic
 
 def kmer_transfo(
         df_,

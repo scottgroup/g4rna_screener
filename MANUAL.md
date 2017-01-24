@@ -16,7 +16,7 @@ G4RNA Screener - The nucleic acid screener for RNA G-quadruplexes
 
     ./screen.py [-a|--ann <path>.pkl] [-c|--columns <list>] [-w|--window <int>]
                 [-s|--step <int>] [-sn|--score-name <str>] [-b|--bedgraph]
-                [-f|--fasta-file <path>.fas] [-e|--error] [-v|--verbose]
+                [-f|--fasta <path>.fas] [-e|--error] [-v|--verbose]
 
 ## **DESCRIPTION**
 
@@ -43,9 +43,10 @@ nih.gov/pubmed/24121682) if specified.
 > Path to the pickled ANN (.pkl) which will provide the program a particular
 pattern to evaluate each sequences or windows of sequences.
 
-**_-f, --fasta_file_**
+**_-f, --fasta_**
 
-> Path to the fasta_file to analyze.
+> Path to the fasta file to analyze. Will support string value as long as it
+respects the fasta format. Use /dev/stdin to feed standard input to -f argument.
 
 **_-w, --window_**
 
