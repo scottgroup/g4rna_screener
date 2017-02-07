@@ -123,14 +123,23 @@ def gen_G4RNA_df(
             g4h_map = g4hunter(seq_dict[key], output_map=True)
         try:
             strt = int(infos.get('start'))
+            nd = int(infos.get('end'))
+            strnd = str(infos.get('strand'))
         except:
             strt = None
+            nd = None
+            strnd = None
         for no, s in enumerate(seq):
             row = []
-            content['id'] = first_id+len(data)
-            if strt != None:
+            if strt != None and strnd == '+':
                 content['start'] = int(strt+no*window_step)
                 content['end'] = int(strt+no*window_step+len(s)-1)
+            elif strt != None and strnd == '-':
+                content['start'] = int(nd-no*window_step-len(s)+1)
+                content['end'] = int(nd-no*window_step)
+            else:
+                content['start'] = int(no*window_step)
+                content['end'] = int(no*window_step+len(s)-1)
             content['length'] = len(s)
             content['sequence'] = s
             content['cGcC'] = cgcc_scorer(s)

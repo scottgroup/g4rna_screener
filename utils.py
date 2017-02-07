@@ -148,13 +148,15 @@ def format_description(fas_description, verbose=None):
         infos['source'] = "Ensembl"
     except:
         verbosify(verbose,"Ensembl not recognised for %s"%fas_description)
-    if 'description' not in infos.keys() or infos['description'] == '':
+    if 'description' not in infos.keys() or infos.get('description') == '':
         infos['description'] = fas_description
-    if 'chromosome' in infos.keys() and infos['range'][:3] != 'chr':
+    if 'chromosome' in infos.keys() and infos.get('chromosome')\
+    and infos.get('chromosome')[:3] != 'chr':
         infos['chromosome'] = 'chr' + infos['chromosome']
-    if 'range' in infos.keys() and infos['range'][:3] != 'chr':
+    if 'range' in infos.keys() and infos.get('range')\
+    and infos.get('range')[:3] != 'chr':
         infos['range'] = 'chr' + infos['range']
-    if 'strand' in infos.keys() and infos['strand'] == '1':
+    if 'strand' in infos.keys() and infos.get('strand') == '1':
         infos['strand'] = '+'
     return infos
 

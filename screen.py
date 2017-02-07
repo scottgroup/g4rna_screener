@@ -31,11 +31,11 @@ def apply_network(ann,
         if essential not in columns:
             columns.append(essential)
             columns_to_drop.append(essential)
-    try:
-        RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
-                columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-    except:
+    if type(fasta) == 'str' and fasta[0] == '>':
         RNome_df = gen_G4RNA_df(fasta_str_fetcher(fasta, verbose=verbose),
+                columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
+    else:
+        RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
     if 'score' in columns:
         network_file = open(ann,'r')
