@@ -143,21 +143,35 @@ def format_description(fas_description, verbose=None):
     except:
         verbosify(verbose,"RefSeq not recognised for %s"%fas_description)
     try:
-        infos = regex.match("(?<description>(?:(?<identifier>[^ ]*) )?(?<stable_id>ENS[T|G]\d*)?(?:\.\d)?(?: (?<info>[^ ]*))?(?: chromosome:(?<genome_build>[^:]*):(?<range>(?<chromosome>[^:]*):(?<start>\d*):(?<end>\d*)):(?<strand>.)(?:.*)))", 
+        infos = regex.match("(?<description>(?:(?<identifier>[^ ]*) )?\
+(?<stable_id>ENS[T|G]\d*)(?:\.\d)?(?: (?<info>[^ ]*))?(?: chromosome:\
+(?<genome_build>[^:]*):(?<range>(?<chromosome>[^:]*):(?<start>\d*):\
+(?<end>\d*)):(?<strand>.)(?:.*))?(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*))?)", 
                 fas_description).groupdict()
+        if infos.get('start') == None and infos.get('exon_start'):
+            infos['start'] = infos['exon_start']
+        if infos.get('end') == None and infos.get('exon_end'):
+            infos['end'] = infos['exon_end']
         infos['source'] = "Ensembl"
     except:
         verbosify(verbose,"Ensembl not recognised for %s"%fas_description)
     if 'description' not in infos.keys() or infos.get('description') == '':
         infos['description'] = fas_description
+    if 'strand' in infos.keys() and infos.get('strand') == '1':
+        infos['strand'] = '+'
+    if infos.get('strand') not in ['+','-'] and infos.get('start')\
+    and infos.get('end'):
+        if int(infos.get('start')) <= int(infos.get('end')):
+            infos['strand'] = '+'
+        elif int(infos.get('start')) > int(infos.get('end')):
+            infos['strand'] = '-'
+            [infos['start'], infos['end']] = [infos.get('end'),infos.get('start')]
     if 'chromosome' in infos.keys() and infos.get('chromosome')\
     and infos.get('chromosome')[:3] != 'chr':
         infos['chromosome'] = 'chr' + infos['chromosome']
     if 'range' in infos.keys() and infos.get('range')\
     and infos.get('range')[:3] != 'chr':
         infos['range'] = 'chr' + infos['range']
-    if 'strand' in infos.keys() and infos.get('strand') == '1':
-        infos['strand'] = '+'
     return infos
 
 def fasta_fetcher(

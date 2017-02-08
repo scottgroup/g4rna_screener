@@ -91,10 +91,11 @@ def gen_G4RNA_df(
                         '(?<full_name>.*) \[Source:HGNC Symbol;Acc:HGNC:\
 (?<HGNC_    id>\d+)\]',content["gene_description"]).group('full_name','HGNC_id'))
             except:
-                if 'stable_id' in infos.keys() and infos.get('stable_id')[3] == 'T':
-                    content['transcript_stable_id'] = infos.get('stable_id')
-                elif 'stable_id' in infos.keys() and infos.get('stable_id')[3] == 'G':
-                    content['gene_stable_id'] = infos.get('stable_id')
+                if 'stable_id' in infos.keys() and infos.get('stable_id'):
+                    if infos.get('stable_id')[3] == 'T':
+                        content['transcript_stable_id'] = infos.get('stable_id')
+                    elif infos.get('stable_id')[3] == 'G':
+                        content['gene_stable_id'] = infos.get('stable_id')
                 else:
                     pass
             try:

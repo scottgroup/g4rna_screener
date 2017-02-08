@@ -131,7 +131,7 @@ def main():
             if arg in ["-?","--help"]:
                 screen_usage()
             elif arg in ["-V","--version"]:
-                print "Version: G4RNA screener Alpha"
+                print "Version: G4RNA screener Alpha-0.1"
                 sys.exit(0)
             elif arg in ["-b","--bedgraph",
                     "-v","--verbose",
