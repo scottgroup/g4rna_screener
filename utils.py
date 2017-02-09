@@ -146,7 +146,8 @@ def format_description(fas_description, verbose=None):
         infos = regex.match("(?<description>(?:(?<identifier>[^ ]*) )?\
 (?<stable_id>ENS[T|G]\d*)(?:\.\d)?(?: (?<info>[^ ]*))?(?: chromosome:\
 (?<genome_build>[^:]*):(?<range>(?<chromosome>[^:]*):(?<start>\d*):\
-(?<end>\d*)):(?<strand>.)(?:.*))?(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*))?)", 
+(?<end>\d*)):(?<strand>.)(?:.*))?(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*)\
+)?(?:.*))", 
                 fas_description).groupdict()
         if infos.get('start') == None and infos.get('exon_start'):
             infos['start'] = infos['exon_start']
