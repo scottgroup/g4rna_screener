@@ -15,18 +15,16 @@ G4RNA Screener - The nucleic acid screener for RNA G-quadruplexes
     ./screen.py [-?|--help] [-V|--version]
 
     ./screen.py [-a|--ann <path>.pkl] [-c|--columns <list>] [-w|--window <int>]
-                [-s|--step <int>] [-sn|--score-name <str>] [-b|--bedgraph]
+                [-s|--step <int>] [-b|--bedgraph]
                 [-f|--fasta <path>.fas] [-e|--error] [-v|--verbose]
 
 ## **DESCRIPTION**
 
-Score nucleic acid using an artificial neural network classifier that was
+Score nucleic acid using an artificial neural network classifier (G4NN) that was
 trained on sequences found in the [G4RNA database](http://scottgroup.med.
-usherbrooke.ca/G4RNA/). The screener was generated and trained using the
-[TNAS library](http://gitlabscottgroup.med.usherbrooke.ca/J-Michel/tnas).
-It also provides the previously described: [G4Hunter score](https://www.
-ncbi.nlm.nih.gov/pubmed/26792894) and [cG/cC score](https://www.ncbi.nlm.
-nih.gov/pubmed/24121682) if specified.
+usherbrooke.ca/G4RNA/). It also provides the previously described: 
+[G4Hunter score](https://www.ncbi.nlm.nih.gov/pubmed/26792894) and 
+[cG/cC score](https://www.ncbi.nlm.nih.gov/pubmed/24121682) if specified.
 
 ## **OPTIONS**
 
@@ -55,12 +53,6 @@ respects the fasta format. Use /dev/stdin to feed standard input to -f argument.
 **_-s, --step_** = 10
 
 > Step size that moves the window along the long sequences.
-
-**_--sn, --score-name_**
-
-> Name of the similitude score that will be provided in a column for each
-sequences or windows. When not provided, the ANN is not used to score and the
-program will provide all other columns in the table output except the score.
 
 **_-c, --columns_** = description
 
@@ -115,12 +107,12 @@ gene,description,chromosome,strand,...
 >
 > + G4H:            _G4Hunter score_
 >
-> + score:          _Score obtained through the ANN (Must be specified when
+> + G4NN:           _Score obtained through G4NN (Must be specified when
                     enumerating columns in list)_
 
 ###### Fasta example
 
-Any fasta file can support columns: description,length,sequence,cGcC,G4H,score
+Any fasta file can support columns: description,length,sequence,cGcC,G4H,G4NN
 ```html
 >Description1
 SEQUENCE1

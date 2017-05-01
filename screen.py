@@ -8,12 +8,11 @@ def apply_network(ann,
         wdw_len,
         wdw_step,
         bedgraph=None,
-        score_name='score',
         verbose=False):
     """
     Wrapping function
     Uses a provided ANN in pickled format (.pkl) and retrieves a dataframe of
-    sequences to obtain their pg4_score. Saves the complete values in a .csv
+    sequences to obtain their G4NN score. Saves the complete values in a .csv
     file. 
     
     Wrapping functions don't return values but combine functions to achieve
@@ -23,7 +22,7 @@ def apply_network(ann,
         columns = ['gene_symbol','mrnaAcc','protAcc','gene_stable_id',
                 'transcript_stable_id','full_name','HGNC_id','identifier',
                 'source','genome_build','chromosome','start','end','strand',
-                'length','sequence','cGcC','G4H','score']
+                'length','sequence','cGcC','G4H','G4NN']
     else:
         columns = regex.split(",", columns.strip("[]"))
     columns_to_drop = []
@@ -37,15 +36,15 @@ def apply_network(ann,
     else:
         RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-    if 'score' in columns:
+    if 'G4NN' in columns:
         network_file = open(ann,'r')
         ann = pickle.load(network_file)
         network_file.close()
         RNome_trans_df = kmer_transfo(RNome_df, 3, 'length', 'sequence', 'g4',
                 int(wdw_len), jellyfish=False, overlapped=True,
                 verbose=verbose)
-        RNome_df = submit_seq(ann, RNome_trans_df.drop('score',axis=1),
-                [c for c in columns if c != 'score'], score_name,
+        RNome_df = submit_seq(ann, RNome_trans_df.drop('G4NN',axis=1),
+                [c for c in columns if c != 'G4NN'], "G4NN",
                 verbose=verbose)
     if bedgraph:
         sys.stdout.write('browser position %s:%d-%d\n'%(
@@ -57,7 +56,7 @@ def apply_network(ann,
                 RNome_df.chromosome == RNome_df[
                     'chromosome'].iloc[0]].end.max()))
         sys.stdout.write('track type=bedGraph name=%s visibility=full \
-color=200,100,0\n'%score_name)
+color=200,100,0\n'%RNome_df.drop(columns_to_drop, axis=1).columns[-1])
     return RNome_df.drop(columns_to_drop, axis=1).to_csv(
             path_or_buf=sys.stdout, sep='\t',
             index=(bedgraph==None), header=(bedgraph==None))
@@ -74,7 +73,6 @@ def screen_usage(error_message=False):
     print "  -f, --fasta     \tSupply a fasta file (.fa .fas format)"
     print "  -w, --window    \tWindow length"
     print "  -s, --step      \tStep length between windows"
-    print "  -sn,--score-name\tName given to the score of similitude"
     print "  -b, --bedgraph  \tDisplay output as bedGraph, user must \
 provide columns"
     print "  -c, --columns   \tColumns to display: gene,sequence,..."
@@ -102,8 +100,8 @@ provide columns"
         print "  sequence   \t\tSequence analyzed"
         print "  cGcC       \t\tcGcC score"
         print "  G4H        \t\tG4Hunter score"
-        print "  score      \t\tscore of similitude"
-        print "             \t\t(must be specified to use ann)\n"
+        print "  G4NN       \t\tG4NN score of similitude"
+        print "             \t\t(must be specified to use ANN)\n"
     print "Other options:"
     print "  -v, --verbose   \tVerbose output with timed operations"
     print "  -e, --error     \tRaise errors and exceptions\n"
@@ -113,7 +111,6 @@ provide columns"
     else:
         sys.exit(0)
 
-
 def main():
     """
     Handles arguments.
@@ -121,8 +118,7 @@ def main():
     global start_time
     start_time = time.time()
     #Default values here in option_dict
-    option_dict = {"--columns":"description,sequence,score",
-            "--score-name":"score",
+    option_dict = {"--columns":"description,sequence,G4NN",
             "--window":False,
             "--step":10,
             "--fasta":False}
@@ -131,7 +127,7 @@ def main():
             if arg in ["-?","--help"]:
                 screen_usage()
             elif arg in ["-V","--version"]:
-                print "Version: G4RNA screener Alpha-0.1"
+                print "Version: G4RNA screener Alpha-0.2"
                 sys.exit(0)
             elif arg in ["-b","--bedgraph",
                     "-v","--verbose",
@@ -141,8 +137,7 @@ def main():
                     "-f","--fasta",
                     "-c","--columns",
                     "-w","--window",
-                    "-s","--step",
-                    "-sn","--score-name"]:
+                    "-s","--step"]:
                 try:
                     option_dict[arg] = sys.argv[no+1]
                 except:
@@ -165,11 +160,11 @@ def main():
         if len(option_dict.get(column_str).split(',')) != 4 \
         or (['chromosome','start','end'] <= option_dict.get(
             column_str).split(',')) == False \
-        or (set(['score','cGcC','G4H']).isdisjoint(option_dict.get(
+        or (set(['G4NN','cGcC','G4H']).isdisjoint(option_dict.get(
             column_str).split(','))):
             screen_usage('bedGraph format requires 4 columns: \
 chrome,start,end,[SCORE]\n\
-        where [SCORE] is either score, cGcC or G4H')
+        where [SCORE] is either cGcC, G4H or G4NN')
     try:
         apply_network(option_dict.get("-a") or option_dict.get("--ann"),
                 option_dict.get("-f") or option_dict.get("--fasta"),
@@ -177,7 +172,6 @@ chrome,start,end,[SCORE]\n\
                 option_dict.get("-w") or option_dict.get("--window"),
                 option_dict.get("-s") or option_dict.get("--step"),
                 option_dict.get("-b") or option_dict.get("--bedgraph"),
-                option_dict.get("-sn") or option_dict.get("--score-name"),
                 verbose=option_dict.get("-v") or option_dict.get("--verbose"))
     except:
         if "-e" in option_dict.keys() or "--error" in option_dict.keys():
