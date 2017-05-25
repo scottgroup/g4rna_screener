@@ -21,7 +21,7 @@ gitlab username:    _J-Michel_
 
 gitlab url:         *gitlabscottgroup.med.usherbrooke.ca/J-Michel/g4rna-screener*
 
-Version: G4RNA screener Alpha-0.2
+Version: G4RNA screener Beta-0.0
 
 
 ## **DEPENDENCIES**
