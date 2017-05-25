@@ -120,8 +120,9 @@ def main():
     #Default values here in option_dict
     option_dict = {"--columns":"description,sequence,G4NN",
             "--window":False,
+            "--ann":"G4RNA_2016-11-07.pkl",
             "--step":10,
-            "--fasta":False}
+            "--fasta":"STDIN"}
     for no, arg in enumerate(sys.argv):
         if arg[0] == "-":
             if arg in ["-?","--help"]:
@@ -148,10 +149,11 @@ def main():
                         screen_usage('No value provided for option "%s"'%arg)
             else:
                 screen_usage('Argument "%s" not recognized'%arg)
-    if len(sys.argv) == 1 \
-    or ("-c" in option_dict.keys() and option_dict["-c"] == "list") \
+    if ("-c" in option_dict.keys() and option_dict["-c"] == "list") \
     or (option_dict["--columns"] == "list"):
         screen_usage()
+    if len(sys.argv) == 1 and sys.stdin.isatty():
+        screen_usage("no arguments detected")
     if ("-b" in option_dict.keys() or "--bedgraph" in option_dict.keys()):
         if "-c" in  option_dict.keys():
             column_str = "-c"
@@ -165,6 +167,10 @@ def main():
             screen_usage('bedGraph format requires 4 columns: \
 chrome,start,end,[SCORE]\n\
         where [SCORE] is either cGcC, G4H or G4NN')
+    if "-f" in option_dict.keys() and option_dict['-f'] == "STDIN":
+        option_dict['-f'] = "/dev/stdin"
+    elif option_dict['--fasta'] == "STDIN":
+        option_dict['--fasta'] = "/dev/stdin"
     try:
         apply_network(option_dict.get("-a") or option_dict.get("--ann"),
                 option_dict.get("-f") or option_dict.get("--fasta"),

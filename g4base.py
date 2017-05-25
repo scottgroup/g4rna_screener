@@ -139,8 +139,8 @@ def gen_G4RNA_df(
                 content['start'] = int(nd-no*window_step-len(s)+1)
                 content['end'] = int(nd-no*window_step)
             else:
-                content['start'] = int(no*window_step)
-                content['end'] = int(no*window_step+len(s)-1)
+                content['start'] = int(no*window_step+1)
+                content['end'] = int(no*window_step+len(s))
             content['length'] = len(s)
             content['sequence'] = s
             content['cGcC'] = cgcc_scorer(s)

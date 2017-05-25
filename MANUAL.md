@@ -36,15 +36,15 @@ usherbrooke.ca/G4RNA/). It also provides the previously described:
 
 > Show version information and exit.
 
-**_-a, --ann_**
+**_-a, --ann_** = G4RNA_2016-11-07.pkl
 
 > Path to the pickled ANN (.pkl) which will provide the program a particular
 pattern to evaluate each sequences or windows of sequences.
 
-**_-f, --fasta_**
+**_-f, --fasta_** = STDIN
 
 > Path to the fasta file to analyze. Will support string value as long as it
-respects the fasta format. Use /dev/stdin to feed standard input to -f argument.
+respects the fasta format. Use "STDIN" to feed standard input to -f argument.
 
 **_-w, --window_**
 
