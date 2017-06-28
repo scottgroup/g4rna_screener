@@ -5,6 +5,7 @@ import sys
 import regex
 import pickle
 import pandas as pd
+import numpy as np
 from collections import Counter, OrderedDict
 
 
@@ -28,13 +29,13 @@ def verbosify(verbose, message, time_it=False):
     Supports both Boolean value of verbose and numerical level of verbose.
     Either print or flush message.
     """
-    if (verbose == True or verbose > 0) and time_it == True:
+    if verbose == None:
+        pass
+    elif (verbose == True or verbose > 0) and time_it == True:
         print message+"\t"*(4-len(message)/8)+\
         "{}".format(hms_string(time.time() - start_time))
     elif (verbose == True or verbose > 0) and time_it == False:
         print message
-    elif verbose == None:
-        pass
     else:
         if "\n" in message:
             print message

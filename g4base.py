@@ -6,7 +6,7 @@ from pybrain.datasets import ClassificationDataSet
 
 def cgcc_scorer(sequence):
     """
-    Returns the cGcC scores of a sequence.
+    Returns the cGcC score of a sequence.
     
 ****NOTE: The cGcC score does not consider flanking G/C like the G4Hunter****
     
