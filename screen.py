@@ -21,7 +21,7 @@ def apply_network(ann,
     if "all" in columns:
         columns = ['gene_symbol','mrnaAcc','protAcc','gene_stable_id',
                 'transcript_stable_id','full_name','HGNC_id','identifier',
-                'source','genome_build','chromosome','start','end','strand',
+                'source','genome_assembly','chromosome','start','end','strand',
                 'length','sequence','cGcC','G4H','G4NN']
     else:
         columns = regex.split(",", columns.strip("[]"))
@@ -88,7 +88,7 @@ provide columns"
         print "  HGNC_id    \t\tHGNC numeric ID"
         print "  identifier \t\tIdentifier"
         print "  source     \t\tSource of the data"
-        print "  genome_build\t\tGenome build version"
+        print "  genome_assembly\tGenome build version"
         print "  chromosome \t\tChromosome"
         print "  start      \t\tStart position"
         print "  end        \t\tEnd position"
