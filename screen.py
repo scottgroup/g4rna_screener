@@ -21,7 +21,7 @@ def apply_network(ann,
     if "all" in columns:
         columns = ['gene_symbol','mrnaAcc','protAcc','gene_stable_id',
                 'transcript_stable_id','full_name','HGNC_id','identifier',
-                'source','genome_build','chromosome','start','end','strand',
+                'source','genome_assembly','chromosome','start','end','strand',
                 'length','sequence','cGcC','G4H','G4NN']
     else:
         columns = regex.split(",", columns.strip("[]"))
@@ -30,10 +30,10 @@ def apply_network(ann,
         if essential not in columns:
             columns.append(essential)
             columns_to_drop.append(essential)
-    if type(fasta) == 'str' and fasta[0] == '>':
+    if fasta[0] == '>':
         RNome_df = gen_G4RNA_df(fasta_str_fetcher(fasta, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-    else:
+    elif fasta[-3:] == '.fa' or fasta[-4:] in ['.fas', '.txt']:
         RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
     if 'G4NN' in columns:
@@ -57,9 +57,7 @@ def apply_network(ann,
                     'chromosome'].iloc[0]].end.max()))
         sys.stdout.write('track type=bedGraph name=%s visibility=full \
 color=200,100,0\n'%RNome_df.drop(columns_to_drop, axis=1).columns[-1])
-    return RNome_df.drop(columns_to_drop, axis=1).to_csv(
-            path_or_buf=sys.stdout, sep='\t',
-            index=(bedgraph==None), header=(bedgraph==None))
+    return RNome_df.drop(columns_to_drop, axis=1)
 
 def screen_usage(error_message=False):
     """
@@ -90,7 +88,7 @@ provide columns"
         print "  HGNC_id    \t\tHGNC numeric ID"
         print "  identifier \t\tIdentifier"
         print "  source     \t\tSource of the data"
-        print "  genome_build\t\tGenome build version"
+        print "  genome_assembly\tGenome build version"
         print "  chromosome \t\tChromosome"
         print "  start      \t\tStart position"
         print "  end        \t\tEnd position"
@@ -178,7 +176,13 @@ chrome,start,end,[SCORE]\n\
                 option_dict.get("-w") or option_dict.get("--window"),
                 option_dict.get("-s") or option_dict.get("--step"),
                 option_dict.get("-b") or option_dict.get("--bedgraph"),
-                verbose=option_dict.get("-v") or option_dict.get("--verbose"))
+                verbose=option_dict.get("-v") or option_dict.get("--verbose")
+                ).to_csv(
+                        path_or_buf=sys.stdout, sep='\t',
+                        index=(option_dict.get("-b")==None or
+                            option_dict.get("--bedgraph")==None),
+                        header=(option_dict.get("-b")==None or
+                            option_dict.get("--bedgraph")==None))
     except:
         if "-e" in option_dict.keys() or "--error" in option_dict.keys():
             raise

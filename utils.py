@@ -135,7 +135,7 @@ def format_description(fas_description, verbose=None):
     '''
     infos = {}
     try:
-        infos = regex.match("(?<description>(?<genome_build>\D\D\d+)?\
+        infos = regex.match("(?<description>(?<genome_assembly>\D\D\d+)?\
 (?:_(?<source>[^_]*))?_?(?:(?P<mrnaAcc>[N|X][M|R]_\d+)|(?P<protAcc>[N|X]P_\d+))\
 (?: range=(?<range>(?<chromosome>chr.*):(?<start>(\d*))-(?<end>(\d*))))?\
 (?: 5'pad=(?<pad5>\d*))?(?: 3'pad=(?<pad3>\d*))?(?: strand=(?<strand>.))?\
@@ -146,7 +146,7 @@ def format_description(fas_description, verbose=None):
     try:
         infos = regex.match("(?<description>(?:(?<identifier>[^ ]*) )?\
 (?<stable_id>ENS[T|G]\d*)(?:\.\d)?(?: (?<info>[^ ]*))?(?: chromosome:\
-(?<genome_build>[^:]*):(?<range>(?<chromosome>[^:]*):(?<start>\d*):\
+(?<genome_assembly>[^:]*):(?<range>(?<chromosome>[^:]*):(?<start>\d*):\
 (?<end>\d*)):(?<strand>.)(?:.*))?(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*)\
 )?(?:.*))", 
                 fas_description).groupdict()

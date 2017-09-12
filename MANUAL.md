@@ -89,7 +89,7 @@ gene,description,chromosome,strand,...
 >
 > + source:         _Source of the sequence_
 >
-> + genome_build:   _Genome build_
+> + genome_assembly: _Genome assembly_
 >
 > + start:          _Start position on genomic positive strand_
 >
