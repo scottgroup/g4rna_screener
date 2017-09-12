@@ -118,9 +118,9 @@ def main():
     global start_time
     start_time = time.time()
     #Default values here in option_dict
-    option_dict = {"--columns":"description,sequence,G4NN",
-            "--window":False,
+    option_dict = {"--columns":"description,sequence,cGcC,G4H,G4NN",
             "--ann":"G4RNA_2016-11-07.pkl",
+            "--window":60,
             "--step":10,
             "--fasta":"STDIN"}
     for no, arg in enumerate(sys.argv):
@@ -128,7 +128,7 @@ def main():
             if arg in ["-?","--help"]:
                 screen_usage()
             elif arg in ["-V","--version"]:
-                print "Version: G4RNA screener Beta-0.0"
+                print "Version: G4RNA screener 0.1"
                 sys.exit(0)
             elif arg in ["-b","--bedgraph",
                     "-v","--verbose",

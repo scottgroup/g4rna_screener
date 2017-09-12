@@ -159,9 +159,14 @@ def format_description(fas_description, verbose=None):
         verbosify(verbose,"Ensembl not recognised for %s"%fas_description)
     if 'description' not in infos.keys() or infos.get('description') == '':
         try:
-            infos = regex.search("(?<description>(?:.*)(GRCh\d\d:)?(hg\d\d)?(?\
+            try:
+                infos = regex.search("(?<description>(?:.*)(GRCh\d\d:)?(hg\d\d)?(?\
 <chromosome>(chr)?[^:]*):(?<start>\d*)[:-](?<end>\d*)(?::)(?<strand>[+-1]?)?)",
-                fas_description).groupdict()
+                        fas_description).groupdict()
+            except:
+                infos = regex.search("(?<description>(?:.*)(?: range=(?<range>(\
+?<chromosome>chr.*):(?<start>(\d*))-(?<end>(\d*))))(?: .*strand=(?<strand>.)))",
+                        fas_description).groupdict()
         except:
             infos['description'] = fas_description
     if 'strand' in infos.keys() and infos.get('strand') == '1':
