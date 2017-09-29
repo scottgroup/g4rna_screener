@@ -78,8 +78,8 @@ def retrieve_RefSeq(mrna_accession=None, prot_accession=None):
             host='genome-mysql.cse.ucsc.edu', user='genome', db='hgFixed')
     cursor = mydb.cursor(buffered=True)
     cursor.execute(
-            'SELECT mrnaAcc, protAcc, name, product FROM refLink WHERE \
-mrnaAcc = "%s" OR protAcc = "%s"'%(mrna_accession, prot_accession))
+            'SELECT mrnaAcc, protAcc, name, product FROM refLink WHERE mrnaAcc'\
+                    ' = "%s" OR protAcc = "%s"'%(mrna_accession, prot_accession))
     if mrna_accession == None and prot_accession == None:
         return [None,None,None,None]
     else:
@@ -104,26 +104,40 @@ def retrieve_xref_Ensembl(stable_id=None,mrnaAcc=None,
             host='ensembldb.ensembl.org', user='anonymous',
             db='homo_sapiens_core_86_38')
     cursor = mydb.cursor(buffered=True)
-    base_sql = 'SELECT gene.stable_id, transcript.stable_id, xref.dbprimary_acc\
-, gene.gene_id, transcript.transcript_id, CASE WHEN \
-gene_attrib.attrib_type_id = 4 THEN gene_attrib.value ELSE NULL END AS \
-gene_symbol, gene.description FROM xref JOIN object_xref ON xref.xref_id = \
-object_xref.xref_id JOIN transcript ON transcript.transcript_id = \
-object_xref.ensembl_id JOIN gene ON transcript.gene_id = gene.gene_id JOIN \
-gene_attrib ON gene_attrib.gene_id = transcript.gene_id WHERE '
+    base_sql = 'SELECT gene.stable_id, '\
+            'transcript.stable_id, '\
+            'xref.dbprimary_acc, '\
+            'gene.gene_id, '\
+            'transcript.transcript_id, '\
+            'CASE WHEN gene_attrib.attrib_type_id = 4 '\
+            'THEN gene_attrib.value '\
+            'ELSE NULL END '\
+            'AS gene_symbol, gene.description '\
+            'FROM xref JOIN object_xref '\
+            'ON xref.xref_id = object_xref.xref_id '\
+            'JOIN transcript '\
+            'ON transcript.transcript_id = object_xref.ensembl_id '\
+            'JOIN gene '\
+            'ON transcript.gene_id = gene.gene_id '\
+            'JOIN gene_attrib '\
+            'ON gene_attrib.gene_id = transcript.gene_id '\
+            'WHERE '
     try:
-        cursor.execute(base_sql+'(dbprimary_acc LIKE "N_\_%%" OR dbprimary_acc \
-LIKE "X_\_%%") AND (gene.stable_id = "%s" OR transcript.stable_id = "%s") \
-ORDER BY attrib_type_id'%(stable_id,stable_id))
+        cursor.execute(base_sql+'(dbprimary_acc LIKE "N_\_%%" '\
+                'OR dbprimary_acc LIKE "X_\_%%") '\
+                'AND (gene.stable_id = "%s" '\
+                'OR transcript.stable_id = "%s") '\
+                'ORDER BY attrib_type_id'%(stable_id,stable_id))
         return list(cursor.fetchone())
     except:
         try:
-            cursor.execute(base_sql+'dbprimary_acc = "%s" ORDER BY attrib_type_id'%
-                    mrnaAcc)
+            cursor.execute(base_sql+'dbprimary_acc = "%s" '\
+                    'ORDER BY attrib_type_id'%mrnaAcc)
             return list(cursor.fetchone())
         except:
-            cursor.execute(base_sql+'(dbprimary_acc LIKE "N_\_%%" OR \
-dbprimary_acc LIKE "X_\_%%") AND value = "%s"'%gene_acronym)
+            cursor.execute(base_sql+'(dbprimary_acc LIKE "N_\_%%" '\
+                    'OR dbprimary_acc LIKE "X_\_%%") '\
+                    'AND value = "%s"'%gene_acronym)
             return list(cursor.fetchone())
 
 def format_description(fas_description, verbose=None):
@@ -135,20 +149,33 @@ def format_description(fas_description, verbose=None):
     '''
     infos = {}
     try:
-        infos = regex.match("(?<description>(?<genome_assembly>\D\D\d+)?\
-(?:_(?<source>[^_]*))?_?(?:(?P<mrnaAcc>[N|X][M|R]_\d+)|(?P<protAcc>[N|X]P_\d+))\
-(?: range=(?<range>(?<chromosome>chr.*):(?<start>(\d*))-(?<end>(\d*))))?\
-(?: 5'pad=(?<pad5>\d*))?(?: 3'pad=(?<pad3>\d*))?(?: strand=(?<strand>.))?\
-(?: repeatMasking=(?<repeatMasking>.*))?)",
+        infos = regex.match("(?<description>"\
+                "(?<genome_assembly>\D\D\d+)"\
+                "?(?:_"\
+                "(?<source>[^_]*)"\
+                ")?_?(?:"\
+                "(?P<mrnaAcc>[N|X][M|R]_\d+)"\
+                "|"\
+                "(?P<protAcc>[N|X]P_\d+)"\
+                ")(?: range=(?<range>"\
+                "(?<chromosome>chr.*):(?<start>(\d*))-(?<end>(\d*)))"\
+                ")?(?: 5'pad=(?<pad5>\d*))?(?: 3'pad=(?<pad3>\d*))?"\
+                "(?: strand=(?<strand>.))?"\
+                "(?: repeatMasking=(?<repeatMasking>.*))?)",
                 fas_description).groupdict()
     except:
         verbosify(verbose,"RefSeq not recognised for %s"%fas_description)
     try:
-        infos = regex.match("(?<description>(?:(?<identifier>[^ ]*) )?\
-(?<stable_id>ENS[T|G]\d*)(?:\.\d)?(?: (?<info>[^ ]*))?(?: chromosome:\
-(?<genome_assembly>[^:]*):(?<range>(?<chromosome>[^:]*):(?<start>\d*):\
-(?<end>\d*)):(?<strand>.)(?:.*))?(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*)\
-)?(?:.*))", 
+        infos = regex.match("(?<description>"\
+                "(?:(?<identifier>[^ ]*) )?"\
+                "(?<stable_id>ENS[T|G]\d*)"\
+                "(?:\.\d)? "\
+                "(?: (?<info>[^ ]*))?"\
+                "(?: chromosome:"\
+                "(?<genome_assembly>[^:]*):"\
+                "(?<range>(?<chromosome>[^:]*):(?<start>\d*):(?<end>\d*)):"\
+                "(?<strand>.)(?:.*))?"\
+                "(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*))?(?:.*))",
                 fas_description).groupdict()
         if infos.get('start') == None and infos.get('exon_start'):
             infos['start'] = infos['exon_start']
@@ -160,12 +187,19 @@ def format_description(fas_description, verbose=None):
     if 'description' not in infos.keys() or infos.get('description') == '':
         try:
             try:
-                infos = regex.search("(?<description>(?:.*)(GRCh\d\d:)?(hg\d\d)?(?\
-<chromosome>(chr)?[^:]*):(?<start>\d*)[:-](?<end>\d*)(?::)(?<strand>[+-1]?)?)",
+                infos = regex.search("(?<description>"\
+                        "(?:.*)(GRCh\d\d:)?(hg\d\d)?"\
+                        "(?<chromosome>(chr)?[^:]*):"\
+                        "(?<start>\d*)[:-](?<end>\d*)(?::)"\
+                        "(?<strand>[+-1]?)?)",
                         fas_description).groupdict()
             except:
-                infos = regex.search("(?<description>(?:.*)(?: range=(?<range>(\
-?<chromosome>chr.*):(?<start>(\d*))-(?<end>(\d*))))(?: .*strand=(?<strand>.)))",
+                infos = regex.search("(?<description>"\
+                        "(?:.*)"\
+                        "(?: range=(?<range>"\
+                        "(?<chromosome>chr.*):"\
+                        "(?<start>(\d*))-(?<end>(\d*))))"\
+                        "(?: .*strand=(?<strand>.)))",
                         fas_description).groupdict()
         except:
             infos['description'] = fas_description
@@ -282,9 +316,11 @@ def kmer_transfo(
         lst_rows.append(row)
         if jellyfish is True:
             di_nt_cnts = {}
-            for line_out in subprocess.check_output(u'echo ">0\n%s" | \
-sed "s/U/T/g" | jellyfish count -m 3 -s 100 -o /dev/stdout /dev/stdin | \
-jellyfish dump -ct /dev/stdin | sed "s/T/U/g"'%(df.ix[row,sequence_column].
+            for line_out in subprocess.check_output(u'echo ">0\n%s" | "\
+                    "sed "s/U/T/g" | "\
+                    "jellyfish count -m 3 -s 100 -o /dev/stdout /dev/stdin | "\
+                    "jellyfish dump -ct /dev/stdin | "\
+                    "sed "s/T/U/g"'%(df.ix[row,sequence_column].
     upper().replace('T','U')), shell=True).split('\n')[:-1]:
                 di_nt_cnts[line_out.split('\t')[0]] = int(line_out.split('\t')[1])
         else:

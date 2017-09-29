@@ -13,7 +13,7 @@ def apply_network(ann,
     Wrapping function
     Uses a provided ANN in pickled format (.pkl) and retrieves a dataframe of
     sequences to obtain their G4NN score. Saves the complete values in a .csv
-    file. 
+    file.
     
     Wrapping functions don't return values but combine functions to achieve
     something.
@@ -71,8 +71,8 @@ def screen_usage(error_message=False):
     print "  -f, --fasta     \tSupply a fasta file (.fa .fas format)"
     print "  -w, --window    \tWindow length"
     print "  -s, --step      \tStep length between windows"
-    print "  -b, --bedgraph  \tDisplay output as bedGraph, user must \
-provide columns"
+    print "  -b, --bedgraph  \tDisplay output as bedGraph, user must "\
+            "provide columns"
     print "  -c, --columns   \tColumns to display: gene,sequence,..."
     print "                  \tTo browse available columns use: -c list\n"
     if "-c" and "list" in sys.argv or "--columns" and "list" in sys.argv:
@@ -162,9 +162,9 @@ def main():
             column_str).split(',')) == False \
         or (set(['G4NN','cGcC','G4H']).isdisjoint(option_dict.get(
             column_str).split(','))):
-            screen_usage('bedGraph format requires 4 columns: \
-chrome,start,end,[SCORE]\n\
-        where [SCORE] is either cGcC, G4H or G4NN')
+            screen_usage('bedGraph format requires 4 columns: '\
+                    'chromosome,start,end,[SCORE]\n'\
+                    '               where [SCORE] is either cGcC, G4H or G4NN')
     if "-f" in option_dict.keys() and option_dict['-f'] == "STDIN":
         option_dict['-f'] = "/dev/stdin"
     elif option_dict['--fasta'] == "STDIN":
@@ -188,7 +188,6 @@ chrome,start,end,[SCORE]\n\
             raise
         else:
             screen_usage('An option is missing, incorrect or not authorized')
-
 
 if __name__ == '__main__':
     main()
