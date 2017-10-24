@@ -199,7 +199,8 @@ def format_description(fas_description, verbose=None):
                         "(?: range=(?<range>"\
                         "(?<chromosome>chr.*):"\
                         "(?<start>(\d*))-(?<end>(\d*))))"\
-                        "(?: .*strand=(?<strand>.)))",
+                        "(?: .*strand=(?<strand>.))"\
+                        "(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*)))",
                         fas_description).groupdict()
         except:
             infos['description'] = fas_description

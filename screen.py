@@ -33,9 +33,12 @@ def apply_network(ann,
     if fasta[0] == '>':
         RNome_df = gen_G4RNA_df(fasta_str_fetcher(fasta, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-    elif fasta[-3:] == '.fa' or fasta[-4:] in ['.fas', '.txt']:
+    elif fasta[-3:] == '.fa' or fasta[-4:] in ['.fas', '.txt']\
+    or fasta == "/dev/stdin":
         RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
+    else:
+        screen_usage('fasta input not specified or not supported')
     if 'G4NN' in columns:
         network_file = open(ann,'r')
         ann = pickle.load(network_file)
@@ -126,7 +129,7 @@ def main():
             if arg in ["-?","--help"]:
                 screen_usage()
             elif arg in ["-V","--version"]:
-                print "Version: G4RNA screener 0.1"
+                print "Version: G4RNA screener 0.2"
                 sys.exit(0)
             elif arg in ["-b","--bedgraph",
                     "-v","--verbose",
