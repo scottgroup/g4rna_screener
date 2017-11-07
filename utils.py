@@ -157,7 +157,7 @@ def format_description(fas_description, verbose=None):
                 "(?P<mrnaAcc>[N|X][M|R]_\d+)"\
                 "|"\
                 "(?P<protAcc>[N|X]P_\d+)"\
-                ")(?: range=(?<range>"\
+                ")(?:\.\d+)?(?: (range=)?(?<range>"\
                 "(?<chromosome>chr.*):(?<start>(\d*))-(?<end>(\d*)))"\
                 ")?(?: 5'pad=(?<pad5>\d*))?(?: 3'pad=(?<pad3>\d*))?"\
                 "(?: strand=(?<strand>.))?"\
@@ -167,20 +167,16 @@ def format_description(fas_description, verbose=None):
         verbosify(verbose,"RefSeq not recognised for %s"%fas_description)
     try:
         infos = regex.match("(?<description>"\
-                "(?:(?<identifier>[^ ]*) )?"\
-                "(?<stable_id>ENS[T|G]\d*)"\
-                "(?:\.\d)? "\
-                "(?: (?<info>[^ ]*))?"\
-                "(?: chromosome:"\
-                "(?<genome_assembly>[^:]*):"\
-                "(?<range>(?<chromosome>[^:]*):(?<start>\d*):(?<end>\d*)):"\
-                "(?<strand>.)(?:.*))?"\
+                "(?:(?<identifier>[^ ]*)? )?"\
+                "(?:(?<stable_id>ENS[T|G]\d*)"\
+                "(?:\.\d)? )"\
+                "(?:(?<info>[^ ]*) )?"\
+                "(?:(chromosome:)?"\
+                "(?:(?<genome_assembly>[^:]*):)?"\
+                "(?<range>(?:(?<chromosome>[^:]*):)(?<start>\d*):(?<end>\d*)):"\
+                "(?<strand>[+-1])(?:.*))?"\
                 "(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*))?(?:.*))",
                 fas_description).groupdict()
-        if infos.get('start') == None and infos.get('exon_start'):
-            infos['start'] = infos['exon_start']
-        if infos.get('end') == None and infos.get('exon_end'):
-            infos['end'] = infos['exon_end']
         infos['source'] = "Ensembl"
     except:
         verbosify(verbose,"Ensembl not recognised for %s"%fas_description)
@@ -188,22 +184,35 @@ def format_description(fas_description, verbose=None):
         try:
             try:
                 infos = regex.search("(?<description>"\
-                        "(?:.*)(GRCh\d\d:)?(hg\d\d)?"\
-                        "(?<chromosome>(chr)?[^:]*):"\
-                        "(?<start>\d*)[:-](?<end>\d*)(?::)"\
-                        "(?<strand>[+-1]?)?)",
-                        fas_description).groupdict()
-            except:
-                infos = regex.search("(?<description>"\
-                        "(?:.*)"\
-                        "(?: range=(?<range>"\
-                        "(?<chromosome>chr.*):"\
-                        "(?<start>(\d*))-(?<end>(\d*))))"\
-                        "(?: .*strand=(?<strand>.))"\
+                        "(?:.*)(GRCh\d\d:)?(hg\d\d:)?"\
+                        "(?:(?<chromosome>(chr)?[^:]*):)?"\
+                        "(?:(?<start>\d*)[:-](?<end>\d*):?)?"\
+                        "(?<strand>[+-1])?"\
                         "(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*)))",
                         fas_description).groupdict()
+            except:
+                try:
+                    infos = regex.search("(?<description>"\
+                            "(?:.*)"\
+                            "(?: range=(?<range>"\
+                            "(?<chromosome>chr.*):"\
+                            "(?<start>(\d*))-(?<end>(\d*))))?"\
+                            "(?: .*strand=(?<strand>.))?"\
+                            "(?:\|(?<exon_start>\d*)\|(?<exon_end>\d*)))",
+                            fas_description).groupdict()
+                except:
+                    infos = regex.search("(?<description>"\
+                            "(?:.*)(GRCh\d\d:)?(hg\d\d:)?"\
+                            "(?:(?<chromosome>(chr)?[^:]*):)?"\
+                            "(?:(?<start>\d*)[:-](?<end>\d*):?)?"\
+                            "(?<strand>[+-1]?)?)",
+                            fas_description).groupdict()
         except:
             infos['description'] = fas_description
+    if infos.get('start') == None and infos.get('exon_start'):
+        infos['start'] = infos['exon_start']
+    if infos.get('end') == None and infos.get('exon_end'):
+        infos['end'] = infos['exon_end']
     if 'strand' in infos.keys() and infos.get('strand') == '1':
         infos['strand'] = '+'
     if infos.get('strand') not in ['+','-'] and infos.get('start')\
