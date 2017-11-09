@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from g4base import *
+import os
 
 def apply_network(ann,
         fasta,
@@ -110,7 +111,7 @@ def screen_usage(error_value=False, error_message=False):
     print "  -v, --verbose   \tVerbose output with timed operations"
     print "  -e, --error     \tRaise errors and exceptions\n"
     if error_value and error_message:
-        sys.stderr("UsageError:", error_message)
+        sys.stderr.write("UsageError: "+error_message+"\n\n")
         sys.exit(error_value)
     else:
         sys.exit(0)
@@ -122,8 +123,8 @@ def main():
     global start_time
     start_time = time.time()
     #Default values here in option_dict
-    option_dict = {"--columns":"description,sequence,cGcC,G4H,G4NN",
-            "--ann":"G4RNA_2016-11-07.pkl",
+    option_dict = {"--columns":"description,sequence,start,cGcC,G4H,G4NN",
+            "--ann":os.path.dirname(__file__)+"/G4RNA_2016-11-07.pkl",
             "--window":60,
             "--step":10,
             "--fasta":"STDIN"}
