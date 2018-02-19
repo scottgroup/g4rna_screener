@@ -34,15 +34,20 @@ def apply_network(ann,
     if fasta[0] == '>':
         RNome_df = gen_G4RNA_df(fasta_str_fetcher(fasta, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-    elif fasta[-3:] == '.fa' or fasta[-4:] in ['.fas', '.txt']\
+    elif fasta[-3:] == '.fa'\
+    or fasta[-4:] in ['.fas', '.txt']\
+    or fasta[-6:] == '.fasta'\
     or fasta == "/dev/stdin":
-        try:
-            RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
+        ### without try/except since it catches most errors
+        RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
                     columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-        except:
-            screen_usage(502, 'fasta format not respected')
+#        try:
+#            RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
+#                    columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
+#        except:
+#            screen_usage(52, 'fasta format not respected')
     else:
-        screen_usage(502, 'fasta input not specified or not supported')
+        screen_usage(52, 'fasta input not specified or not supported')
     if 'G4NN' in columns:
         network_file = open(ann,'r')
         ann = pickle.load(network_file)
@@ -80,7 +85,7 @@ def screen_usage(error_value=False, error_message=False):
     print "  -s, --step      \tStep length between windows"
     print "  -b, --bedgraph  \tDisplay output as bedGraph, user must "\
             "provide columns"
-    print "  -c, --columns   \tColumns to display: gene,sequence,..."
+    print "  -c, --columns   \tColumns to display: gene_symbol,sequence,..."
     print "                  \tTo browse available columns use: -c list\n"
     if "-c" and "list" in sys.argv or "--columns" and "list" in sys.argv:
         print "Available columns:"
@@ -151,14 +156,14 @@ def main():
                     in option_dict.keys():
                         raise
                     else:
-                        screen_usage(501, 'No value provided for option "%s"'%arg)
+                        screen_usage(51, 'No value provided for option "%s"'%arg)
             else:
-                screen_usage(501, 'Argument "%s" not recognized'%arg)
+                screen_usage(51, 'Argument "%s" not recognized'%arg)
     if ("-c" in option_dict.keys() and option_dict["-c"] == "list") \
     or (option_dict["--columns"] == "list"):
         screen_usage()
     if len(sys.argv) == 1 and sys.stdin.isatty():
-        screen_usage(501, "no arguments detected")
+        screen_usage(51, "no arguments detected")
     if ("-b" in option_dict.keys() or "--bedgraph" in option_dict.keys()):
         if "-c" in  option_dict.keys():
             column_str = "-c"
@@ -169,7 +174,7 @@ def main():
             column_str).split(',')) == False \
         or (set(['G4NN','cGcC','G4H']).isdisjoint(option_dict.get(
             column_str).split(','))):
-            screen_usage(501, 'bedGraph format requires 4 columns: '\
+            screen_usage(51, 'bedGraph format requires 4 columns: '\
                     'chromosome,start,end,[SCORE]\n'\
                     '               where [SCORE] is either cGcC, G4H or G4NN')
     if "-f" in option_dict.keys() and option_dict['-f'] == "STDIN":
@@ -194,7 +199,7 @@ def main():
         if "-e" in option_dict.keys() or "--error" in option_dict.keys():
             raise
         else:
-            screen_usage(500, 'An option is missing, incorrect or not authorized')
+            screen_usage(50, 'An option is missing, incorrect or not authorized')
 
 if __name__ == '__main__':
     main()
