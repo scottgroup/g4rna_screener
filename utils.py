@@ -168,7 +168,7 @@ def format_description(fas_description, verbose=None):
     try:
         infos = regex.match("(?<description>"\
                 "(?:(?<identifier>[^ ]*)? )?"\
-                "(?:(?<stable_id>ENS[T|G]\d*)"\
+                "(?:((?<stable_id>ENS[T|G]\d*)|(?<chromosomal>dna:chromosome))"\
                 "(?:\.\d)? )"\
                 "(?:(?<info>[^ ]*) )?"\
                 "(?:(chromosome:)?"\
