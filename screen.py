@@ -191,9 +191,9 @@ def main():
                 verbose=option_dict.get("-v") or option_dict.get("--verbose")
                 ).to_csv(
                         path_or_buf=sys.stdout, sep='\t',
-                        index=(option_dict.get("-b")==None or
+                        index=(option_dict.get("-b")==None and
                             option_dict.get("--bedgraph")==None),
-                        header=(option_dict.get("-b")==None or
+                        header=(option_dict.get("-b")==None and
                             option_dict.get("--bedgraph")==None))
     except:
         if "-e" in option_dict.keys() or "--error" in option_dict.keys():
