@@ -31,12 +31,12 @@ def apply_network(ann,
         if essential not in columns:
             columns.append(essential)
             columns_to_drop.append(essential)
-    if fasta[0] == '>':
+    if str(fasta)[0] == '>':
         RNome_df = gen_G4RNA_df(fasta_str_fetcher(fasta, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-    elif fasta[-3:] == '.fa'\
-    or fasta[-4:] in ['.fas', '.txt']\
-    or fasta[-6:] == '.fasta'\
+    elif str(fasta)[-3:] == '.fa'\
+    or str(fasta)[-4:] in ['.fas', '.txt']\
+    or str(fasta)[-6:] == '.fasta'\
     or fasta == "/dev/stdin":
         ### without try/except since it catches most errors
         RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
