@@ -330,12 +330,12 @@ def kmer_transfo(
                     "sed "s/U/T/g" | "\
                     "jellyfish count -m 3 -s 100 -o /dev/stdout /dev/stdin | "\
                     "jellyfish dump -ct /dev/stdin | "\
-                    "sed "s/T/U/g"'%(df.ix[row,sequence_column].
+                    "sed "s/T/U/g"'%(df.loc[row,sequence_column].
     upper().replace('T','U')), shell=True).split('\n')[:-1]:
                 di_nt_cnts[line_out.split('\t')[0]] = int(line_out.split('\t')[1])
         else:
             di_nt_lst = regex.findall(
-                    '.{%d}'%depth,df.ix[row,sequence_column].upper().replace('T','U'),
+                    '.{%d}'%depth,df.loc[row,sequence_column].upper().replace('T','U'),
                     overlapped=True)
             di_nt_cnts = Counter(di_nt_lst)
         if len([di_nt_cnts[x] for x in di_nt_cnts]) > 4**depth:
@@ -345,6 +345,6 @@ def kmer_transfo(
         di_nt_freqs = [(str(di_nt), float(di_nt_cnts[di_nt])/total_di_nt)
                 for di_nt in di_nt_cnts if "N" not in di_nt]
         for di_ntd, freq in di_nt_freqs:
-            df.ix[row,di_ntd] = freq
+            df.loc[row,di_ntd] = freq
     verbosify(verbose, "Kmer transformed")
     return df
