@@ -1,7 +1,5 @@
 <Use a Markdown document viewer to display this file as an HTML file in your>
-<internet browser:>
-<Markdown Viewer 1.12 (Firefox extension) *recommended>
-<Markdown Reader 1.0.12 (Chrome extension)>
+<internet browser>
 
 **G4RNA SCREENER MANUAL**
 =========================

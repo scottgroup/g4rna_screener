@@ -1,5 +1,21 @@
 #!/usr/bin/env python
 
+#    Identification of potential RNA G-quadruplexes by G4RNA screener.
+#    Copyright (C) 2018  Jean-Michel Garant
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from g4base import *
 import os
 
@@ -38,14 +54,8 @@ def apply_network(ann,
     or str(fasta)[-4:] in ['.fas', '.txt']\
     or str(fasta)[-6:] == '.fasta'\
     or fasta == "/dev/stdin":
-        ### without try/except since it catches most errors
         RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
                     columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-#        try:
-#            RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
-#                    columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-#        except:
-#            screen_usage(52, 'fasta format not respected')
     else:
         screen_usage(52, 'fasta input not specified or not supported')
     if 'G4NN' in columns:
@@ -138,7 +148,7 @@ def main():
             if arg in ["-?","--help"]:
                 screen_usage()
             elif arg in ["-V","--version"]:
-                print "Version: G4RNA screener 0.2"
+                print "Version: G4RNA screener 0.3"
                 sys.exit(0)
             elif arg in ["-b","--bedgraph",
                     "-v","--verbose",
