@@ -364,3 +364,28 @@ def kmer_transfo(
             df.loc[row,di_ntd] = freq
     verbosify(verbose, "Kmer transformed")
     return df
+
+def trimer_transfo(
+        df_,
+        sequence_column,
+        verbose=False):
+    """
+    Define sequences by their 3mers proportions and returns a bigger
+    dataframe containing it.
+    This version always considers overlapping trimers.
+    
+    Return pandas dataframe.
+    """
+    df = df_.copy()
+    nts = ['A','U','C','G']
+    tri_nts = []
+    for nt1 in nts:
+        for nt2 in nts:
+            for nt3 in nts:
+                tri_nts.append([nt1+nt2+nt3,
+                    "(?P<"+nt1+nt2+nt3+">"+nt1+"(?="+nt2+nt3+"))"])
+    for each, pattern in tri_nts:
+        df[each] = df[sequence_column].str.upper().str.replace(
+                'T','U').str.count(pattern)/(df[sequence_column].str.len()-2)
+    verbosify(verbose, "trimer transformed")
+    return df

@@ -62,9 +62,10 @@ def apply_network(ann,
         network_file = open(ann,'r')
         ann = pickle.load(network_file)
         network_file.close()
-        RNome_trans_df = kmer_transfo(RNome_df, 3, 'length', 'sequence', 'g4',
-                int(wdw_len), jellyfish=False, overlapped=True,
-                verbose=verbose)
+        RNome_trans_df = trimer_transfo(RNome_df, 'sequence', verbose=verbose)
+#        RNome_trans_df = kmer_transfo(RNome_df, 3, 'length', 'sequence', 'g4',
+#                int(wdw_len), jellyfish=False, overlapped=True,
+#                verbose=verbose)
         RNome_df = submit_seq(ann, RNome_trans_df.drop('G4NN',axis=1),
                 [c for c in columns if c != 'G4NN'], "G4NN",
                 verbose=verbose)
