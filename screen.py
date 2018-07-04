@@ -18,6 +18,7 @@
 
 from g4base import *
 import os
+import argparse
 
 def apply_network(ann,
         fasta,
@@ -212,5 +213,133 @@ def main():
         else:
             screen_usage(50, 'An option is missing, incorrect or not authorized')
 
+class Formatter(argparse.ArgumentDefaultsHelpFormatter):
+    # use defined argument order to display usage
+    def _format_usage(self, usage, actions, groups, prefix):
+        if prefix is None:
+            prefix = 'usage: '
+
+        # if usage is specified, use that
+        if usage is not None:
+            usage = usage % dict(prog=self._prog)
+
+        # if no optionals or positionals are available, usage is just prog
+        elif usage is None and not actions:
+            usage = '%(prog)s' % dict(prog=self._prog)
+        elif usage is None:
+            prog = '%(prog)s' % dict(prog=self._prog)
+            # build full usage string
+            action_usage = self._format_actions_usage(actions, groups) # NEW
+            usage = ' '.join([s for s in [prog, action_usage] if s])
+            # omit the long line wrapping code
+        # prefix with 'usage:'
+        return '%s%s\n\n' % (prefix, usage)
+
+def arguments():
+    """
+    Handles arguments
+    """
+    parser = argparse.ArgumentParser(formatter_class=Formatter,
+            prog="screen.py",
+            description="Identification of potential RNA G-quadruplexes",
+            epilog="G4RNA screener  Copyright (C) 2018  Jean-Michel Garant "\
+            "This program comes with ABSOLUTELY NO WARRANTY. This is free "\
+            "software, and you are welcome to redistribute it under certain "\
+            "conditions <http://www.gnu.org/licenses/>.")
+    parser.add_argument('FASTA',
+            type=argparse.FileType('r'),
+            help='FASTA file (.fa .fas)')
+    parser.add_argument("-a", "--ann",
+            type=argparse.FileType('r'),
+            default=os.path.dirname(__file__)+"/G4RNA_2016-11-07.pkl",
+            help="Supply a picled ANN (.pkl format)")
+    parser.add_argument("-w", "--window",
+        type=int,
+        default=60,
+        help="Window length",
+        metavar="INT")
+    parser.add_argument("-s", "--step",
+            type=int,
+            default=10,
+            help="Step length between windows",
+            metavar="INT")
+    parser.add_argument("-b", "--bedgraph",
+            action="store_true",
+            default=False,
+            help="Display output as BedGraph, user must provides columns")
+    parser.add_argument("-c", "--columns",
+            nargs="+",
+            choices=["list", "all", "description", "gene_symbol",
+                "mrnaAcc",
+                "protAcc",
+                "gene_stable_id",
+                "transcript_stable_id",
+                "full_name",
+                "HGNC_id",
+                "identifier",
+                "source",
+                "genome_assembly",
+                "chromosome",
+                "start",
+                "end",
+                "strand",
+                "range",
+                "length",
+                "sequence",
+                "cGcC",
+                "G4H",
+                "G4NN",
+                ],
+            default="description",
+            help="Columns to display. To browse available columns use: -c list",
+            metavar="")
+    parser.add_argument("-v", "--verbose",
+            action="store_true",
+            default=False,
+            help="Verbose output with timed operations")
+    parser.add_argument("-e", "--error",
+            action="store_true",
+            default=False,
+            help="Raise errors and exceptions")
+
+    return parser
+
+def to_replace_main():
+    """
+    Functions calls
+    """
+    args = arguments().parse_args()
+    if args.columns == ["list"]:
+        splitted_help = arguments().format_help().split(". To browse available columns use:\n\
+                        -c list (default: description)")
+        print("\n\t".join([splitted_help[0],
+                "Available columns:",
+                "description\t\tDescription as available in fasta (Default)",
+                "all        \t\tAll of the following except description\n",
+                "gene_symbol\t\tGene symbol",
+                "mrnaAcc    \t\tRefSeq mRNA accession number",
+                "protAcc    \t\tRefseq protein accession number",
+                "gene_stable_id\tEnsembl gene stable ID",
+                "transcript_stable_id\tEnsembl transcript stable ID",
+                "full_name  \t\tGene full name (From HGNC)",
+                "HGNC_id    \t\tHGNC numeric ID",
+                "identifier \t\tIdentifier",
+                "source     \t\tSource of the data",
+                "genome_assembly\tGenome build version",
+                "chromosome \t\tChromosome",
+                "start      \t\tStart position",
+                "end        \t\tEnd position",
+                "strand     \t\tCoding strand",
+                "range      \t\tInitial chromosomic range",
+                "length     \t\tLength of sequence analyzed",
+                "sequence   \t\tSequence analyzed",
+                "cGcC       \t\tcGcC score",
+                "G4H        \t\tG4Hunter score",
+                "G4NN       \t\tG4NN score of similitude",
+                "           \t\t(must be specified to use ANN)",
+                splitted_help[1]]))
+    print(args)
+
 if __name__ == '__main__':
     main()
+#    to_replace_main()
