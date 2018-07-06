@@ -18,6 +18,7 @@
 
 from g4base import *
 import os
+import sys
 import argparse
 
 def apply_network(ann,
@@ -41,8 +42,8 @@ def apply_network(ann,
                 'transcript_stable_id','full_name','HGNC_id','identifier',
                 'source','genome_assembly','chromosome','start','end','strand',
                 'length','sequence','cGcC','G4H','G4NN']
-    else:
-        columns = regex.split(",", columns.strip("[]"))
+    #else:
+    #    columns = regex.split(",", columns.strip("[]"))
     columns_to_drop = []
     for essential in ['length', 'sequence', 'g4']:
         if essential not in columns:
@@ -60,9 +61,9 @@ def apply_network(ann,
     else:
         screen_usage(52, 'fasta input not specified or not supported')
     if 'G4NN' in columns:
-        network_file = open(ann,'r')
-        ann = pickle.load(network_file)
-        network_file.close()
+    #    network_file = open(ann,'r')
+        ann = pickle.load(ann)
+    #    network_file.close()
         RNome_trans_df = trimer_transfo(RNome_df, 'sequence', verbose=verbose)
 #        RNome_trans_df = kmer_transfo(RNome_df, 3, 'length', 'sequence', 'g4',
 #                int(wdw_len), jellyfish=False, overlapped=True,
@@ -213,7 +214,7 @@ def main():
         else:
             screen_usage(50, 'An option is missing, incorrect or not authorized')
 
-class Formatter(argparse.ArgumentDefaultsHelpFormatter):
+class Formatter(argparse.HelpFormatter):
     # use defined argument order to display usage
     def _format_usage(self, usage, actions, groups, prefix):
         if prefix is None:
@@ -247,29 +248,34 @@ def arguments():
             "software, and you are welcome to redistribute it under certain "\
             "conditions <http://www.gnu.org/licenses/>.")
     parser.add_argument('FASTA',
-            type=argparse.FileType('r'),
+            type=str,
             help='FASTA file (.fa .fas)')
     parser.add_argument("-a", "--ann",
             type=argparse.FileType('r'),
             default=os.path.dirname(__file__)+"/G4RNA_2016-11-07.pkl",
-            help="Supply a picled ANN (.pkl format)")
+            help="Supply a picled ANN (default: G4RNA_2016-11-07.pkl)")
     parser.add_argument("-w", "--window",
         type=int,
         default=60,
-        help="Window length",
+        help="Window length (default: 60)",
         metavar="INT")
     parser.add_argument("-s", "--step",
             type=int,
             default=10,
-            help="Step length between windows",
+            help="Step length between windows (default: 10)",
             metavar="INT")
     parser.add_argument("-b", "--bedgraph",
             action="store_true",
             default=False,
             help="Display output as BedGraph, user must provides columns")
+            ## TODO use choices of three scores as bedgraph options which will
+            ## select columns for the user, must include verifications
     parser.add_argument("-c", "--columns",
             nargs="+",
-            choices=["list", "all", "description", "gene_symbol",
+            choices=["list",
+                "all",
+                "description",
+                "gene_symbol",
                 "mrnaAcc",
                 "protAcc",
                 "gene_stable_id",
@@ -290,8 +296,9 @@ def arguments():
                 "G4H",
                 "G4NN",
                 ],
-            default="description",
-            help="Columns to display. To browse available columns use: -c list",
+            default=["description","sequence","start","cGcC","G4H","G4NN"],
+            help="Columns to display (default: description). "\
+                    "To browse available columns use: -c list",
             metavar="")
     parser.add_argument("-v", "--verbose",
             action="store_true",
@@ -308,9 +315,11 @@ def to_replace_main():
     """
     Functions calls
     """
-    args = arguments().parse_args()
+    parser = arguments()
+    args = parser.parse_args()
     if args.columns == ["list"]:
-        splitted_help = arguments().format_help().split(". To browse available columns use:\n\
+        splitted_help = parser.format_help().split(
+        ". To browse available columns use:\n\
                         -c list (default: description)")
         print("\n\t".join([splitted_help[0],
                 "Available columns:",
@@ -338,8 +347,34 @@ def to_replace_main():
                 "G4NN       \t\tG4NN score of similitude",
                 "           \t\t(must be specified to use ANN)",
                 splitted_help[1]]))
-    print(args)
+    if args.bedgraph and len(args.columns) != 4 and args.columns[-1] not in [
+            'cGcC', 'G4H', 'G4NN']:
+        parser.print_usage()
+        sys.stderr.write(parser.prog+': error: '\
+                'BedGraph format requires 4 columns: '\
+                'chromosome start end [SCORE]\n'\
+                'where [SCORE] is either cGcC, G4H or G4NN\n')
+        sys.exit()
+    print args
+    try:
+        apply_network(args.ann,
+                args.FASTA,
+                args.columns,
+                args.window,
+                args.step,
+                args.bedgraph,
+                args.verbose
+                ).to_csv(
+                        path_or_buf=sys.stdout, sep='\t',
+                        index=(args.bedgraph==False),
+                        header=(args.bedgraph==False))
+    except:
+        if args.error:
+            raise
+        else:
+            screen_usage(50, 'An option is missing, incorrect or not authorized')
+
 
 if __name__ == '__main__':
-    main()
-#    to_replace_main()
+#    main()
+    to_replace_main()
