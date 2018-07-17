@@ -16,7 +16,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from utils import *
+import regex
+import utils
+import pandas as pd
 from pybrain.datasets import ClassificationDataSet
 
 
@@ -82,7 +84,7 @@ def gen_G4RNA_df(
     """
     data = []
     for key in seq_dict.keys():
-        infos = format_description(key)
+        infos = utils.format_description(key)
         content = {}
         for ke in infos.keys():
             content[ke] = infos[ke]
@@ -98,8 +100,8 @@ def gen_G4RNA_df(
                         content["transcript_id"],
                         content["gene_symbol"],
                         content["gene_description"]
-                        ] = retrieve_xref_Ensembl(infos.get('stable_id'),
-                                infos.get('mrnaAcc'), retrieve_RefSeq(
+                        ] = utils.retrieve_xref_Ensembl(infos.get('stable_id'),
+                                infos.get('mrnaAcc'), utils.retrieve_RefSeq(
                                     infos.get('mrnaAcc'),infos.get('protAcc')
                                     )[2])
                 [content["full_name"],
@@ -121,14 +123,15 @@ def gen_G4RNA_df(
                         content['protAcc'],
                         content['gene_symbol'],
                         content['product']
-                        ] = retrieve_RefSeq(infos["mrnaAcc"],infos["protAcc"])
+                        ] = utils.retrieve_RefSeq(
+                                infos["mrnaAcc"],infos["protAcc"])
             except:
                 try:
                     [content['mrnaAcc'],
                             content['protAcc'],
                             content['gene_symbol'],
                             content['product']
-                            ] = retrieve_RefSeq(content["mrnaAcc"])
+                            ] = utils.retrieve_RefSeq(content["mrnaAcc"])
                 except:
                     pass
         for ke in infos.keys():
@@ -175,7 +178,7 @@ def gen_G4RNA_df(
                 except:
                     row.append(None)
             data.append(row)
-    verbosify(verbose, "DataFrame built")
+    utils.verbosify(verbose, "DataFrame built")
     return pd.DataFrame(data=data, index=range(
         first_id, first_id+len(data)), columns=columns)
 
@@ -204,7 +207,7 @@ def submit_seq(
     test_results = ann.activateOnDataset(alldata_tst)
     final_df = df_.copy()
     final_df[score_name]= pd.Series(test_results[:,1], index=final_df.index)
-    verbosify(verbose, 'Sequence submitted')
+    utils.verbosify(verbose, 'Sequence submitted')
     return final_df.drop(
             [c for c in final_df.columns if c not in except_columns][:-1],
             axis=1)

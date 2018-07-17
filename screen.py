@@ -16,10 +16,12 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from g4base import *
 import os
 import sys
+import pickle
 import argparse
+import utils
+import g4base
 
 def apply_network(ann,
         fasta,
@@ -46,16 +48,19 @@ def apply_network(ann,
             columns_to_drop.append(essential)
     # manage files and stings differently using adapted fasta fetcher
     if type(fasta) == type(''):
-        RNome_df = gen_G4RNA_df(fasta_str_fetcher(fasta, verbose=verbose),
+        RNome_df = g4base.gen_G4RNA_df(utils.fasta_str_fetcher(fasta,
+            verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
     else:
-        RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
+        RNome_df = g4base.gen_G4RNA_df(
+                utils.fasta_fetcher(fasta, 0, 0, verbose=verbose),
                     columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
     # only loads ANN and trimer_transfo when G4NN is in columns
     if 'G4NN' in columns:
         ann = pickle.load(ann)
-        RNome_trans_df = trimer_transfo(RNome_df, 'sequence', verbose=verbose)
-        RNome_df = submit_seq(ann, RNome_trans_df.drop('G4NN',axis=1),
+        RNome_trans_df = utils.trimer_transfo(RNome_df, 'sequence',
+                verbose=verbose)
+        RNome_df = g4base.submit_seq(ann, RNome_trans_df.drop('G4NN',axis=1),
                 [c for c in columns if c != 'G4NN'], "G4NN",
                 verbose=verbose)
     # write bedgraph header in stdout if -b --bedgraph in arguments 

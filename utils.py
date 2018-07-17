@@ -18,7 +18,6 @@
 
 import sys
 import regex
-import pickle
 import pandas as pd
 import numpy as np
 from collections import Counter, OrderedDict
