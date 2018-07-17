@@ -39,6 +39,8 @@ python2.7 (2.7.12)
 
 ##### From Python
 
+Available from pip
+
 ```bash
 biopython (1.68)
 numpy (1.11.0)
@@ -53,9 +55,9 @@ scipy (0.18.1)
 > -c, --columns arguments. It is not available through pip but here are the
 > steps to follow to install it:
 > ```bash
-> cd PATH/TO/PYTHON/dist-packages/    or    cd PATH/TO/PYTHON/site-packages/
 > sudo -i
-> wget https://dev.mysql.com/get/Downloads/Connector-Python/mysql-connector-python-2.1.4.tar.gz
+> cd PATH/TO/PYTHON/dist-packages/    or    cd PATH/TO/PYTHON/site-packages/
+> wget https://dev.mysql.com/get/Downloads/Connector-Python/mysql-connector-python-2.1.4.tar.gz --no-check-certificate
 > tar -xzf mysql-connector-python-2.1.4.tar.gz
 > cd mysql-connector-python-2.1.4
 > python setup.py install

@@ -29,64 +29,57 @@ def apply_network(ann,
         bedgraph=None,
         verbose=False):
     """
-    Wrapping function
-    Uses a provided ANN in pickled format (.pkl) and retrieves a dataframe of
-    sequences to obtain their G4NN score. Saves the complete values in a .csv
-    file.
-    
-    Wrapping functions don't return values but combine functions to achieve
-    something.
+    Apply the ANN object to the sequences given in a fasta file or fasta string
     """
+    # define columns in "all"
     if "all" in columns:
         columns = ['gene_symbol','mrnaAcc','protAcc','gene_stable_id',
                 'transcript_stable_id','full_name','HGNC_id','identifier',
                 'source','genome_assembly','chromosome','start','end','strand',
                 'length','sequence','cGcC','G4H','G4NN']
-    #else:
-    #    columns = regex.split(",", columns.strip("[]"))
     columns_to_drop = []
+    # three columns are essentials
+    # they are created and dropped if wasn't included in the user request
     for essential in ['length', 'sequence', 'g4']:
         if essential not in columns:
             columns.append(essential)
             columns_to_drop.append(essential)
-    if str(fasta)[0] == '>':
+    # manage files and stings differently using adapted fasta fetcher
+    if type(fasta) == type(''):
         RNome_df = gen_G4RNA_df(fasta_str_fetcher(fasta, verbose=verbose),
                 columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-    elif str(fasta)[-3:] == '.fa'\
-    or str(fasta)[-4:] in ['.fas', '.txt']\
-    or str(fasta)[-6:] == '.fasta'\
-    or fasta == "/dev/stdin":
+    else:
         RNome_df = gen_G4RNA_df(fasta_fetcher(fasta, 0, 0, verbose=verbose),
                     columns, 1, int(wdw_len), int(wdw_step), verbose=verbose)
-    else:
-        screen_usage(52, 'fasta input not specified or not supported')
+    # only loads ANN and trimer_transfo when G4NN is in columns
     if 'G4NN' in columns:
-    #    network_file = open(ann,'r')
         ann = pickle.load(ann)
-    #    network_file.close()
         RNome_trans_df = trimer_transfo(RNome_df, 'sequence', verbose=verbose)
-#        RNome_trans_df = kmer_transfo(RNome_df, 3, 'length', 'sequence', 'g4',
-#                int(wdw_len), jellyfish=False, overlapped=True,
-#                verbose=verbose)
         RNome_df = submit_seq(ann, RNome_trans_df.drop('G4NN',axis=1),
                 [c for c in columns if c != 'G4NN'], "G4NN",
                 verbose=verbose)
+    # write bedgraph header in stdout if -b --bedgraph in arguments 
+    # the browser initial position will cover the first chromosome supplied in
+    # fasta from the minimal position to maximal position
     if bedgraph:
         sys.stdout.write('browser position %s:%d-%d\n'%(
-            RNome_df['chromosome'].iloc[0],
+            RNome_df['chromosome'].dropna().iloc[0],
             RNome_df[
                 RNome_df.chromosome == RNome_df[
-                    'chromosome'].iloc[0]].start.min(),
+                    'chromosome'].dropna().iloc[0]].start.min(),
             RNome_df[
                 RNome_df.chromosome == RNome_df[
-                    'chromosome'].iloc[0]].end.max()))
-        sys.stdout.write('track type=bedGraph name=%s visibility=full \
-color=200,100,0\n'%RNome_df.drop(columns_to_drop, axis=1).columns[-1])
+                    'chromosome'].dropna().iloc[0]].end.max()))
+        sys.stdout.write('track type=bedGraph name=%s visibility=full '\
+                'color=200,0,0\n'%RNome_df.drop(
+                    columns_to_drop, axis=1).columns[-1])
     return RNome_df.drop(columns_to_drop, axis=1)
 
 def screen_usage(error_value=False, error_message=False):
     """
     Provide the user with instructions to use screen.py.
+    
+    DEPRECATED
     """
     print "Usage: PATH/TO/screen.py [OPTIONS...]"
     print "Use -? or --help to show this message"
@@ -134,12 +127,12 @@ def screen_usage(error_value=False, error_message=False):
     else:
         sys.exit(0)
 
-def main():
+def legacy_main():
     """
     Handles arguments.
+    
+    DEPRECATED
     """
-    global start_time
-    start_time = time.time()
     #Default values here in option_dict
     option_dict = {"--columns":"description,sequence,start,cGcC,G4H,G4NN",
             "--ann":os.path.dirname(__file__)+"/G4RNA_2016-11-07.pkl",
@@ -215,15 +208,21 @@ def main():
             screen_usage(50, 'An option is missing, incorrect or not authorized')
 
 class Formatter(argparse.HelpFormatter):
+    """
+    Extended HelpFormatter class in order to correct the greediness of --columns
+    that includes the last positional argument. This extension of HelpFormatter
+    brings the positional argument to the beginning of the command and the 
+    optonal arguments are send to the end.
+    
+    This snippet of code was adapted from user "hpaulj" from StackOverflow.
+    """
     # use defined argument order to display usage
     def _format_usage(self, usage, actions, groups, prefix):
         if prefix is None:
             prefix = 'usage: '
-
         # if usage is specified, use that
         if usage is not None:
             usage = usage % dict(prog=self._prog)
-
         # if no optionals or positionals are available, usage is just prog
         elif usage is None and not actions:
             usage = '%(prog)s' % dict(prog=self._prog)
@@ -238,38 +237,48 @@ class Formatter(argparse.HelpFormatter):
 
 def arguments():
     """
-    Handles arguments
+    Arguments management
     """
+    # declare argument parser using the above adapted HelpFormatter
     parser = argparse.ArgumentParser(formatter_class=Formatter,
-            prog="screen.py",
+            prog=os.path.basename(__file__),
             description="Identification of potential RNA G-quadruplexes",
             epilog="G4RNA screener  Copyright (C) 2018  Jean-Michel Garant "\
             "This program comes with ABSOLUTELY NO WARRANTY. This is free "\
             "software, and you are welcome to redistribute it under certain "\
             "conditions <http://www.gnu.org/licenses/>.")
+    # FASTA input from STDIN is supported by default using argument "-"
     parser.add_argument('FASTA',
-            type=str,
-            help='FASTA file (.fa .fas)')
+            type=argparse.FileType('r'),
+            default=sys.stdin,
+            help='FASTA file (.fa .fas .fasta), - for default STDIN')
+    # the .pkl file is a trained pybrain ANN object that have been saved in a
+    # readable format. Read about pickle package to know more
     parser.add_argument("-a", "--ann",
             type=argparse.FileType('r'),
             default=os.path.dirname(__file__)+"/G4RNA_2016-11-07.pkl",
             help="Supply a picled ANN (default: G4RNA_2016-11-07.pkl)")
+    # length of segmentation of long sequences into analysis windows
     parser.add_argument("-w", "--window",
         type=int,
         default=60,
         help="Window length (default: 60)",
         metavar="INT")
+    # step in between each overlapping windows. small steps means more
+    # resolution but higher computational time
     parser.add_argument("-s", "--step",
             type=int,
             default=10,
             help="Step length between windows (default: 10)",
             metavar="INT")
+    # bedgraph will generate the required header, compatible UCSC genome browser
     parser.add_argument("-b", "--bedgraph",
             action="store_true",
             default=False,
             help="Display output as BedGraph, user must provides columns")
             ## TODO use choices of three scores as bedgraph options which will
             ## select columns for the user, must include verifications
+    # columns to generate are provided by a space delimited list
     parser.add_argument("-c", "--columns",
             nargs="+",
             choices=["list",
@@ -297,26 +306,29 @@ def arguments():
                 "G4NN",
                 ],
             default=["description","sequence","start","cGcC","G4H","G4NN"],
-            help="Columns to display (default: description). "\
+            help="Columns to display (default: description sequence start "\
+                    "cGcC G4H G4NN). "\
                     "To browse available columns use: -c list",
             metavar="")
+    # verbose option is very rudimental
     parser.add_argument("-v", "--verbose",
             action="store_true",
             default=False,
-            help="Verbose output with timed operations")
+            help="Verbose output with operations when completed")
+    # useful for debug, not meant for users
     parser.add_argument("-e", "--error",
             action="store_true",
             default=False,
             help="Raise errors and exceptions")
-
     return parser
 
-def to_replace_main():
+def main():
     """
     Functions calls
     """
     parser = arguments()
     args = parser.parse_args()
+    # custom help message to list columns choices
     if args.columns == ["list"]:
         splitted_help = parser.format_help().split(
         ". To browse available columns use:\n\
@@ -347,15 +359,18 @@ def to_replace_main():
                 "G4NN       \t\tG4NN score of similitude",
                 "           \t\t(must be specified to use ANN)",
                 splitted_help[1]]))
-    if args.bedgraph and len(args.columns) != 4 and args.columns[-1] not in [
-            'cGcC', 'G4H', 'G4NN']:
+    # restrictive verifications for bedgraph options
+    if args.bedgraph and (
+            len(args.columns) != 4\
+            or args.columns[0:3] != ['chromosome','start','end']\
+            or args.columns[-1] not in ['cGcC', 'G4H', 'G4NN']):
         parser.print_usage()
         sys.stderr.write(parser.prog+': error: '\
-                'BedGraph format requires 4 columns: '\
-                'chromosome start end [SCORE]\n'\
+                'BedGraph format requires 4 ordered columns: '\
+                'chromosome start end [SCORE] '\
                 'where [SCORE] is either cGcC, G4H or G4NN\n')
         sys.exit()
-    print args
+    # run in a try/except to generate a custom error message
     try:
         apply_network(args.ann,
                 args.FASTA,
@@ -369,12 +384,16 @@ def to_replace_main():
                         index=(args.bedgraph==False),
                         header=(args.bedgraph==False))
     except:
+        # raise python error calls if -e --error is used
         if args.error:
             raise
+        # custom error message
         else:
-            screen_usage(50, 'An option is missing, incorrect or not authorized')
+            parser.print_usage()
+            sys.stderr.write(parser.prog+': error: '\
+            'An option is missing, incorrect or not authorized\n')
 
 
 if __name__ == '__main__':
-#    main()
-    to_replace_main()
+    main()
+#   legacy_main()

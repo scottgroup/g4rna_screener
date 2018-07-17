@@ -16,7 +16,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
 import sys
 import regex
 import pickle
@@ -24,40 +23,20 @@ import pandas as pd
 import numpy as np
 from collections import Counter, OrderedDict
 
-
-def hms_string(time_elapsed):
-    """
-    Format time in hours, minutes, seconds.
-    
-    Must be included in a string to format a time value.
-    """
-    h = int(time_elapsed / (60 * 60))
-    m = int((time_elapsed % (60 * 60)) / 60)
-    s = time_elapsed % 60.
-    return "{}:{:>02}:{:>05.2f}".format(h, m, s)
-
-def verbosify(verbose, message, time_it=False):
+def verbosify(verbose, message, flush=False):
     """
     Take care of the verbosity for the user.
-    
-****Time_it requires a global variable -> start_time****
     
     Supports both Boolean value of verbose and numerical level of verbose.
     Either print or flush message.
     """
-    if verbose == None:
+    if verbose == False or verbose == 0:
         pass
-    elif (verbose == True or verbose > 0) and time_it == True:
-        print message+"\t"*(4-len(message)/8)+\
-        "{}".format(hms_string(time.time() - start_time))
-    elif (verbose == True or verbose > 0) and time_it == False:
-        print message
-    else:
-        if "\n" in message:
-            print message
-        else:
-            sys.stdout.write(message+"..."+" "*(77-len(message))+"\r")
-            sys.stdout.flush()
+    elif (verbose == True or verbose > 0) and flush == False:
+        sys.stdout.write(message+"\n")
+    elif flush == True:
+        sys.stdout.write(message+"..."+" "*(77-len(message))+"\r")
+        sys.stdout.flush()
 
 def connect_psql(host, user, passwd, db, number_of_cursor):# schema,
     """
@@ -156,7 +135,7 @@ def retrieve_xref_Ensembl(stable_id=None,mrnaAcc=None,
                     'AND value = "%s"'%gene_acronym)
             return list(cursor.fetchone())
 
-def format_description(fas_description, verbose=None):
+def format_description(fas_description, verbose=False):
     '''
     Takes a fasta description line and try to retrieve informations out of it
     if it has a known format.
