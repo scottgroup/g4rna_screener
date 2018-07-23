@@ -212,40 +212,12 @@ def legacy_main():
         else:
             screen_usage(50, 'An option is missing, incorrect or not authorized')
 
-class Formatter(argparse.HelpFormatter):
-    """
-    Extended HelpFormatter class in order to correct the greediness of --columns
-    that includes the last positional argument. This extension of HelpFormatter
-    brings the positional argument to the beginning of the command and the 
-    optonal arguments are send to the end.
-    
-    This snippet of code was adapted from user "hpaulj" from StackOverflow.
-    """
-    # use defined argument order to display usage
-    def _format_usage(self, usage, actions, groups, prefix):
-        if prefix is None:
-            prefix = 'usage: '
-        # if usage is specified, use that
-        if usage is not None:
-            usage = usage % dict(prog=self._prog)
-        # if no optionals or positionals are available, usage is just prog
-        elif usage is None and not actions:
-            usage = '%(prog)s' % dict(prog=self._prog)
-        elif usage is None:
-            prog = '%(prog)s' % dict(prog=self._prog)
-            # build full usage string
-            action_usage = self._format_actions_usage(actions, groups) # NEW
-            usage = ' '.join([s for s in [prog, action_usage] if s])
-            # omit the long line wrapping code
-        # prefix with 'usage:'
-        return '%s%s\n\n' % (prefix, usage)
-
 def arguments():
     """
     Arguments management
     """
     # declare argument parser using the above adapted HelpFormatter
-    parser = argparse.ArgumentParser(formatter_class=Formatter,
+    parser = argparse.ArgumentParser(formatter_class=utils.Formatter,
             prog=os.path.basename(__file__),
             description="Identification of potential RNA G-quadruplexes",
             epilog="G4RNA screener  Copyright (C) 2018  Jean-Michel Garant "\
