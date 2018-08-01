@@ -16,11 +16,18 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# temporary warning filter until packages with numpy dependancies updates
+import warnings
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
 import os
 import sys
 import utils
 import argparse
 import pandas as pd
+
+pd.set_option('display.max_columns', None)
 
 class float_range(object):
     """
@@ -40,29 +47,117 @@ class float_range(object):
     def __repr__(self):
         return '[{0}:{1}]'.format(self.start, self.end)
 
-def custom(sub_df):
-    return list(sub_df.sequence)
-    #return len(''.join(sub_df.sequence))
+#def too_much_merge_g4rna(df, window=60, step=10,
+#        cGcC=False, G4H=False, G4NN=False):
+#    """
+#    Merges consecutive windows that are scored above the provided thresholds
+#    into a single hit sequence and discards windows below the thresholds.
+#    Three level of verification that windows are consecutives:
+#    
+#    description column:
+#    For window with index n, consecutive windows share the same description
+#    description(n) == description(n+1)
+#    
+#    start column:
+#    For window with index n, the consecutive windows have
+#    start(n+1) - start(n) = step
+#    
+#    sequence column:
+#    For window with index n and length l, the consecutive windows have
+#    Last part of sequence(n) == first part of sequence(n+1)
+#    sequence(n)[step-l:] == sequence(n+1)[:l-step]
+#    """
+#    verif = []
+#    if 'description' in df.columns:
+#        verif.append(set(df.index[
+#                df.description.eq(df.description.shift(-1)) |
+#                df.description.shift().eq(df.description)].tolist()))
+#        #verif.append('description')
+#    # start and next start are distanced by step length new column True
+#    if 'start' in df.columns:
+#        verif.append(set(df.index[
+#                df.start.eq(df.start.shift()+step) | 
+#                df.start.shift(-1).eq(df.start+step)].tolist()))
+#        #verif.append('start')
+#    # overlap is the length that sequential windows should share
+#    overlap = window-step
+#    if 'sequence' in df.columns:
+#        verif.append(set(df.index[
+#                df.sequence.str[-overlap:].eq(
+#                    df.sequence.str[:overlap].shift(-1)) | 
+#                df.sequence.str[-overlap:].shift().eq(
+#                    df.sequence.str[:overlap])].tolist()))
+#        #verif.append('sequence')
+#    if len(verif) == 3:
+#        keep = verif.pop(0).intersection(verif.pop(0),verif.pop(0))
+#    elif len(verif) == 2:
+#        keep = verif.pop(0).intersection(verif.pop(0))
+#    elif len(verif) == 1:
+#        keep = verif.pop(0)
+#
+#    return df
 
 def merge_g4rna(df, window=60, step=10,
-        cGcC=False, G4H=False, G4NN=False):
-#    df = df.groupby(lambda x: group_func(df, x-1),
-#            as_index=True, sort=False
-#            )['start','sequence','cGcC','G4H','G4NN'].apply(
-#                    custom).reset_index()
-#    df = df.apply(lambda x: annotate(df, x), axis=1)
-    if 'start' in df.columns:
-        df['start_match'] = (
-                df.start.eq(df.start.shift()+step) | 
-                df.start.shift(-1).eq(df.start+step))
+        cGcC=False, G4H=False, G4NN=False,
+        score_aggregation=list):
+    """
+    """
+    if cGcC:
+        df = df[ df.cGcC >= cGcC ].dropna()
+    if G4H:
+        df = df[ df.G4H >= G4H ].dropna()
+    if G4NN:
+        df = df[ df.G4NN >= G4NN ].dropna()
+    agg_fct = {
+#            'description':"".join,
+            'gene_symbol':'max',
+            'mrnaAcc':'mode',
+            'protAcc':'mode',
+            'gene_stable_id':'mode',
+            'transcript_stable_id':'mode',
+            'full_name':'max',
+            'HGNC_id':'mode',
+            'identifier':'mode',
+            'source':'mode',
+            'genome_assembly':'mode',
+            'chromosome':'mode',
+            'start':'min',
+            'end':'max',
+            'strand':'mode',
+            'range':'mode',
+            'length':'max',
+            'sequence':'max',
+            'cGcC':score_aggregation,
+            'G4H':score_aggregation,
+            'G4NN':score_aggregation
+            }
+    # overlap is the length that sequential windows should share
+    overlap = window-step
     if 'sequence' in df.columns:
-        df['seq_match'] = (
-                df.sequence.str[-50:].eq(df.sequence.str[:50].shift(-1)) | 
-                df.sequence.str[-50:].shift().eq(df.sequence.str[:50]))
-#    df = df.groupby(['start_match','seq_match'])
-    print df
-    
-    #return df
+        for ite in [1,2,3,4,5,6]:
+            df.loc[
+                    df.sequence.str[-overlap:].eq(
+                        df.sequence.str[:overlap].shift(-ite)),
+                    'sequence'] = df.sequence.str[:] + \
+                            df.sequence.str[overlap:].shift(-ite)
+        if 'description' in df.columns:
+            df_grouped = df.groupby(
+                    [df.description,df.sequence.str[-overlap:]],
+                    sort=False,
+                    as_index=False)
+            print "******",{k:agg_fct[k] for k in df.columns.drop(['description'])}
+            return df_grouped.agg({k:agg_fct[k] for k in df.columns.drop(['description'])}).reindex(columns=df.columns)
+        else:
+            df_grouped = df.groupby(
+                    df.sequence.str[-overlap:],
+                    sort=False,
+                    as_index=False)
+            return df_grouped.agg(
+                    {k:agg_fct[k] for k in df.columns},
+                    ).reindex(df.columns, axis=1)
+    else:
+        sys.stderr.write("UsageError: 'sequence' column must be provided\n")
+        sys.exit()
 
 def arguments():
     """
@@ -110,7 +205,16 @@ def arguments():
         help="Use G4NN score threshold to determine positive windows "\
                 "(default: 0.5)",
         metavar="FLOAT")
+    # aggregation function for scores
+    parser.add_argument("-a", "--aggregation",
+        #nargs="+",
+        choices=["max","min","median","mean","std","sem",list],
+        default=list,
+        help="Aggregation function to pool scores of merged windows "\
+                "(default: list)",
+        metavar="STR")
     args = parser.parse_args()
+#    args.aggregation = [ aggr if ( aggr != 'list' ) else list for aggr in args.aggregation ]
     if args.cGcC == None:
         args.cGcC = 4.5
     if args.G4H == None:
@@ -122,11 +226,11 @@ def arguments():
 def main():
     args = arguments()
     g4rna_frame = pd.read_csv(args.tsv, sep='\t', index_col=0)
-#            10,
     merge_g4rna(g4rna_frame,
             60, 10,
-            args.cGcC, args.G4H, args.G4NN)#.to_csv(
-#                        path_or_buf=sys.stdout, sep='\t')
+            args.cGcC, args.G4H, args.G4NN,
+            args.aggregation).to_csv(
+                        path_or_buf=sys.stdout, sep='\t')
 
 if __name__ == '__main__':
     main()

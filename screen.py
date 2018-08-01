@@ -16,6 +16,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# temporary warning filter until packages with numpy dependancies updates
+import warnings
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
 import os
 import sys
 import pickle
@@ -308,8 +313,7 @@ def main():
     # custom help message to list columns choices
     if args.columns == ["list"]:
         splitted_help = parser.format_help().split(
-        ". To browse available columns use:\n\
-                        -c list (default: description)")
+        "                        Columns to display (default: description sequence\n                        start cGcC G4H G4NN). To browse available columns use:\n                        -c list")
         print("\n\t".join([splitted_help[0],
                 "Available columns:",
                 "description\t\tDescription as available in fasta (Default)",
@@ -336,6 +340,7 @@ def main():
                 "G4NN       \t\tG4NN score of similitude",
                 "           \t\t(must be specified to use ANN)",
                 splitted_help[1]]))
+        sys.exit()
     # restrictive verifications for bedgraph options
     if args.bedgraph and (
             len(args.columns) != 4\
