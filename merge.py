@@ -133,13 +133,29 @@ def merge_g4rna(df, window=60, step=10,
             }
     # overlap is the length that sequential windows should share
     overlap = window-step
+    pd.set_option('display.max_colwidth', -1)
     if 'sequence' in df.columns:
-        for ite in [1,2,3,4,5,6]:
+        for ite in [0,1,2,3,4]:
+            print -(overlap+step*ite)
             df.loc[
-                    df.sequence.str[-overlap:].eq(
-                        df.sequence.str[:overlap].shift(-ite)),
-                    'sequence'] = df.sequence.str[:] + \
-                            df.sequence.str[overlap:].shift(-ite)
+                    df.sequence.str[:(overlap+step*ite)].eq(
+                        df.sequence.str[step:].shift(1))
+                    , 'sequence'] = df.sequence.str[:step].shift(1) + \
+                            df.sequence.str[:]
+
+#                    df.sequence.str[-(overlap+step*ite):].eq(
+#                        df.sequence.str[:(overlap+step*ite)].shift(-1))
+#                        &
+#                    df.sequence.str.len().shift(1) <= window)
+#                    , 'sequence'] = df.sequence.str[:] + \
+#                            df.sequence.str[(overlap+step*ite):].shift(-1)
+    #    df.loc[
+    #            df.sequence.str[-overlap:].eq(
+    #                df.sequence.str[:overlap].shift(-6))
+#                , 'sequence'] = df.sequence.str[:df.sequence.str.len().shift(-6).fillna(60)]
+    #            , 'sequence'] = df.sequence.str.len().shift(-6).fillna(0)
+            print df
+        #print pd.DataFrame(df.sequence,df.sequence.str.len())
         if 'description' in df.columns:
             df_grouped = df.groupby(
                     [df.description,df.sequence.str[-overlap:]],
@@ -166,7 +182,7 @@ def arguments():
     # declare argument parser
     parser = argparse.ArgumentParser(formatter_class=utils.Formatter,
             prog=os.path.basename(__file__),
-            description="Merge positive windows of screen.py output and "\
+            description="[WORK IN PROGRESS] [DO NOT DISTRIBUTE] Merge positive windows of screen.py output and "\
                     "discard windows below the threshold(s)",
             epilog="G4RNA screener  Copyright (C) 2018  Jean-Michel Garant "\
             "This program comes with ABSOLUTELY NO WARRANTY. This is free "\
