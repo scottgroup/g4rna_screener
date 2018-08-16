@@ -135,30 +135,20 @@ def merge_g4rna(df, window=60, step=10,
     overlap = window-step
     pd.set_option('display.max_colwidth', -1)
     if 'sequence' in df.columns:
-        for ite in [0,1,2,3,4]:
-            print -(overlap+step*ite)
+        for ite in range(0,len(df)):
+            print any(df.sequence.str[:(overlap+step*ite)].eq(
+                df.sequence.str[step:].shift(1)))
+            if any(df.sequence.str[:(overlap+step*ite)].eq(
+                df.sequence.str[step:].shift(1))) is False:
+                break
             df.loc[
                     df.sequence.str[:(overlap+step*ite)].eq(
                         df.sequence.str[step:].shift(1))
                     , 'sequence'] = df.sequence.str[:step].shift(1) + \
                             df.sequence.str[:]
-
-#                    df.sequence.str[-(overlap+step*ite):].eq(
-#                        df.sequence.str[:(overlap+step*ite)].shift(-1))
-#                        &
-#                    df.sequence.str.len().shift(1) <= window)
-#                    , 'sequence'] = df.sequence.str[:] + \
-#                            df.sequence.str[(overlap+step*ite):].shift(-1)
-    #    df.loc[
-    #            df.sequence.str[-overlap:].eq(
-    #                df.sequence.str[:overlap].shift(-6))
-#                , 'sequence'] = df.sequence.str[:df.sequence.str.len().shift(-6).fillna(60)]
-    #            , 'sequence'] = df.sequence.str.len().shift(-6).fillna(0)
-            print df
-        #print pd.DataFrame(df.sequence,df.sequence.str.len())
         if 'description' in df.columns:
             df_grouped = df.groupby(
-                    [df.description,df.sequence.str[-overlap:]],
+                    [df.description,df.sequence.str[:overlap]],
                     sort=False,
                     as_index=False)
             print "******",{k:agg_fct[k] for k in df.columns.drop(['description'])}
