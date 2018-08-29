@@ -34,6 +34,8 @@ class float_range(object):
     Object that defines a range of float that is authorized or returns the
     authorized range in error. Used to validate score threshold input by user.
     """
+    # float range is a function that is needed to have any threshold of float in
+    # supported range of scores
     def __init__(self, start, end):
         self.start = start
         self.end = end
@@ -102,12 +104,14 @@ def merge_g4rna(df, window=60, step=10,
         score_aggregation=list):
     """
     """
+    # filter windows with users thresholds
     if cGcC:
         df = df[ df.cGcC >= cGcC ].dropna()
     if G4H:
         df = df[ df.G4H >= G4H ].dropna()
     if G4NN:
         df = df[ df.G4NN >= G4NN ].dropna()
+    # aggregate functions are defined in this dictionnary
     agg_fct = {
 #            'description':"".join,
             'gene_symbol':'max',
@@ -134,25 +138,32 @@ def merge_g4rna(df, window=60, step=10,
     # overlap is the length that sequential windows should share
     overlap = window-step
     pd.set_option('display.max_colwidth', -1)
+    # the merge is dependant on the sequence columns
     if 'sequence' in df.columns:
-        for ite in range(0,len(df)):
-            print any(df.sequence.str[:(overlap+step*ite)].eq(
-                df.sequence.str[step:].shift(1)))
+        for ite in range(0,len(df)):#max iterations is dataframe length
+            # check if any windows still needs some merging
             if any(df.sequence.str[:(overlap+step*ite)].eq(
                 df.sequence.str[step:].shift(1))) is False:
                 break
+            # merge overlapping window by appending the [step] first
+            # nucleotides to the next window
             df.loc[
                     df.sequence.str[:(overlap+step*ite)].eq(
                         df.sequence.str[step:].shift(1))
                     , 'sequence'] = df.sequence.str[:step].shift(1) + \
                             df.sequence.str[:]
+        # description column is used when available which should prevent the
+        # eventual problems caused by a user that submits two sequences that
+        # share some subsequences
         if 'description' in df.columns:
             df_grouped = df.groupby(
                     [df.description,df.sequence.str[:overlap]],
                     sort=False,
                     as_index=False)
-            print "******",{k:agg_fct[k] for k in df.columns.drop(['description'])}
-            return df_grouped.agg({k:agg_fct[k] for k in df.columns.drop(['description'])}).reindex(columns=df.columns)
+            # grouping the resulting windows using the first [:overlap] nts
+            return df_grouped.agg(
+                    {k:agg_fct[k] for k in df.columns.drop(['description'])}
+                    ).reindex(columns=df.columns)
         else:
             df_grouped = df.groupby(
                     df.sequence.str[-overlap:],
@@ -211,6 +222,18 @@ def arguments():
         help="Use G4NN score threshold to determine positive windows "\
                 "(default: 0.5)",
         metavar="FLOAT")
+    # windows length
+    parser.add_argument("-w", "--window",
+        type=int,
+        default=60,
+        help="Windows length of input",
+        metavar="INT")
+    # step length
+    parser.add_argument("-s","--step",
+        type=int,
+        default=10,
+        help="Step lenght of input",
+        metavar="INT")
     # aggregation function for scores
     parser.add_argument("-a", "--aggregation",
         #nargs="+",
@@ -219,8 +242,19 @@ def arguments():
         help="Aggregation function to pool scores of merged windows "\
                 "(default: list)",
         metavar="STR")
+    parser.add_argument("-V", "--version",
+            action="version",
+            version="%(prog)s 0.3")
+    # useful for debug, not meant for users
+    parser.add_argument("-e", "--error",
+            action="store_true",
+            default=False,
+            help="Raise errors and exceptions")
+    # needed to to have default help display
+    if len(sys.argv[1:])==0:
+        parser.print_help()
+        parser.exit()
     args = parser.parse_args()
-#    args.aggregation = [ aggr if ( aggr != 'list' ) else list for aggr in args.aggregation ]
     if args.cGcC == None:
         args.cGcC = 4.5
     if args.G4H == None:
@@ -232,11 +266,21 @@ def arguments():
 def main():
     args = arguments()
     g4rna_frame = pd.read_csv(args.tsv, sep='\t', index_col=0)
-    merge_g4rna(g4rna_frame,
-            60, 10,
-            args.cGcC, args.G4H, args.G4NN,
-            args.aggregation).to_csv(
-                        path_or_buf=sys.stdout, sep='\t')
+    try:
+        merge_g4rna(g4rna_frame,
+                args.window, args.step,
+                args.cGcC, args.G4H, args.G4NN,
+                args.aggregation).to_csv(
+                            path_or_buf=sys.stdout, sep='\t')
+    except:
+        # raise python error calls if -e --error is used
+        if args.error:
+            raise
+        # custom error message
+        else:
+            parser.print_usage()
+            sys.stderr.write(parser.prog+': error: '\
+            'An option is missing, incorrect or not authorized\n')
 
 if __name__ == '__main__':
     main()

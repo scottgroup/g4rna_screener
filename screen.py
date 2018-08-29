@@ -239,7 +239,7 @@ def arguments():
     parser.add_argument("-a", "--ann",
             type=argparse.FileType('r'),
             default=os.path.dirname(__file__)+"/G4RNA_2016-11-07.pkl",
-            help="Supply a picled ANN (default: G4RNA_2016-11-07.pkl)")
+            help="Supply a pickled ANN (default: G4RNA_2016-11-07.pkl)")
     # length of segmentation of long sequences into analysis windows
     parser.add_argument("-w", "--window",
         type=int,
@@ -253,13 +253,6 @@ def arguments():
             default=10,
             help="Step length between windows (default: 10)",
             metavar="INT")
-    # bedgraph will generate the required header, compatible UCSC genome browser
-    parser.add_argument("-b", "--bedgraph",
-            action="store_true",
-            default=False,
-            help="Display output as BedGraph, user must provides columns")
-            ## TODO use choices of three scores as bedgraph options which will
-            ## select columns for the user, must include verifications
     # columns to generate are provided by a space delimited list
     parser.add_argument("-c", "--columns",
             nargs="+",
@@ -292,16 +285,61 @@ def arguments():
                     "cGcC G4H G4NN). "\
                     "To browse available columns use: -c list",
             metavar="")
+    # bedgraph will generate the required header, compatible UCSC genome browser
+    parser.add_argument("-b", "--bedgraph",
+            action="store_true",
+            default=False,
+            help="Display output as BedGraph, user must provides columns")
+            ## TODO use choices of three scores as bedgraph options which will
+            ## select columns for the user, must include verifications
     # verbose option is very rudimental
     parser.add_argument("-v", "--verbose",
             action="store_true",
             default=False,
             help="Verbose output with operations when completed")
+    parser.add_argument("-V", "--version",
+            action="version",
+            version="%(prog)s 0.3")
     # useful for debug, not meant for users
     parser.add_argument("-e", "--error",
             action="store_true",
             default=False,
             help="Raise errors and exceptions")
+    # needed to to have default help display
+    if len(sys.argv[1:])==0:
+        parser.print_help()
+        parser.exit()
+    # adapted help for columns listing
+    if "list" in sys.argv:
+        splitted_help = parser.format_help().split(
+        "                        Columns to display (default: description sequence\n                        start cGcC G4H G4NN). To browse available columns use:\n                        -c list")
+        sys.stdout.write("\n\t".join([splitted_help[0],
+            "Available columns:",
+            "all        \t\tAll of the following except description\n",
+            "description\t\tDescription as available in fasta (Default)",
+            "gene_symbol\t\tGene symbol",
+            "mrnaAcc    \t\tRefSeq mRNA accession number",
+            "protAcc    \t\tRefseq protein accession number",
+            "gene_stable_id\t\tEnsembl gene stable ID",
+            "transcript_stable_id\tEnsembl transcript stable ID",
+            "full_name  \t\tGene full name (From HGNC)",
+            "HGNC_id    \t\tHGNC numeric ID",
+            "identifier \t\tIdentifier",
+            "source     \t\tSource of the data",
+            "genome_assembly\t\tGenome build version",
+            "chromosome \t\tChromosome",
+            "start      \t\tStart position (Default)",
+            "end        \t\tEnd position",
+            "strand     \t\tCoding strand",
+            "range      \t\tInitial chromosomic range",
+            "length     \t\tLength of sequence analyzed",
+            "sequence   \t\tSequence analyzed (Default)",
+            "cGcC       \t\tcGcC score (Default)",
+            "G4H        \t\tG4Hunter score (Default)",
+            "G4NN       \t\tG4NN score of similitude (Default)",
+            "           \t\t(must be specified to use ANN)",
+            splitted_help[1]]))
+        sys.exit()
     return parser
 
 def main():
@@ -311,36 +349,6 @@ def main():
     parser = arguments()
     args = parser.parse_args()
     # custom help message to list columns choices
-    if args.columns == ["list"]:
-        splitted_help = parser.format_help().split(
-        "                        Columns to display (default: description sequence\n                        start cGcC G4H G4NN). To browse available columns use:\n                        -c list")
-        print("\n\t".join([splitted_help[0],
-                "Available columns:",
-                "description\t\tDescription as available in fasta (Default)",
-                "all        \t\tAll of the following except description\n",
-                "gene_symbol\t\tGene symbol",
-                "mrnaAcc    \t\tRefSeq mRNA accession number",
-                "protAcc    \t\tRefseq protein accession number",
-                "gene_stable_id\tEnsembl gene stable ID",
-                "transcript_stable_id\tEnsembl transcript stable ID",
-                "full_name  \t\tGene full name (From HGNC)",
-                "HGNC_id    \t\tHGNC numeric ID",
-                "identifier \t\tIdentifier",
-                "source     \t\tSource of the data",
-                "genome_assembly\tGenome build version",
-                "chromosome \t\tChromosome",
-                "start      \t\tStart position",
-                "end        \t\tEnd position",
-                "strand     \t\tCoding strand",
-                "range      \t\tInitial chromosomic range",
-                "length     \t\tLength of sequence analyzed",
-                "sequence   \t\tSequence analyzed",
-                "cGcC       \t\tcGcC score",
-                "G4H        \t\tG4Hunter score",
-                "G4NN       \t\tG4NN score of similitude",
-                "           \t\t(must be specified to use ANN)",
-                splitted_help[1]]))
-        sys.exit()
     # restrictive verifications for bedgraph options
     if args.bedgraph and (
             len(args.columns) != 4\

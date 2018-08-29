@@ -34,7 +34,7 @@ library_name (recommended version)
 ##### From environment
 
 ```bash
-python2.7 (2.7.12)
+python2.7 (2.7.15rc1)
 ```
 
 ##### From Python
