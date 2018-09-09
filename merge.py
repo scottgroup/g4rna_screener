@@ -278,7 +278,6 @@ def main():
             raise
         # custom error message
         else:
-            parser.print_usage()
             sys.stderr.write(parser.prog+': error: '\
             'An option is missing, incorrect or not authorized\n')
 
