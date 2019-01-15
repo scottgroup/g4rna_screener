@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 #    Identification of potential RNA G-quadruplexes by G4RNA screener.
 #    Copyright (C) 2018  Jean-Michel Garant

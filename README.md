@@ -63,6 +63,16 @@ scipy (0.18.1)
 > python setup.py install
 > ```
 
+**Consider adding G4RNA screener to your environment path**
+
+Example for a bash terminal
+```bash
+cd PATH/TO/g4rna_screener
+echo "" >> ~/.bashrc
+echo "# add G4RNA screener to PATH" >> ~/.bashrc
+echo "export PATH=\"\$PATH:$(pwd)\"" >> ~/.bashrc
+source ~/.bashrc
+```
 
 ## **GLOSSARY**
 
